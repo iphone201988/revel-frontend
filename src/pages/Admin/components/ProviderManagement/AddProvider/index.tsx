@@ -1,4 +1,4 @@
-import  { useEffect } from "react";
+import { useEffect } from "react";
 import { AppHeader } from "../../../../../components/AppHeader";
 import { ArrowLeft, UserPlus } from "lucide-react";
 import { Button } from "../../../../../components/Button";
@@ -18,11 +18,12 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import PhoneInput, { type CountryData } from "react-phone-input-2";
 import { useAddProviderMutation } from "../../../../../redux/api/provider";
+import { RoleOptions } from "../../../../../Constant";
 
 export function ProviderAddScreen() {
   const navigate = useNavigate();
 
-  const [addProvider, {data, isSuccess}] = useAddProviderMutation()
+  const [addProvider, { data, isSuccess }] = useAddProviderMutation();
 
   // -------------------- VALIDATION --------------------
   const providerSchema = Yup.object({
@@ -37,7 +38,6 @@ export function ProviderAddScreen() {
     phone: Yup.string().optional(),
     countryCode: Yup.string().optional(),
     licenseNumber: Yup.string().optional(),
-   
   });
 
   // -------------------- FORMIK --------------------
@@ -51,23 +51,21 @@ export function ProviderAddScreen() {
       phone: "",
       countryCode: "",
       licenseNumber: "",
-      
     },
     validationSchema: providerSchema,
     validateOnChange: false,
     validateOnBlur: false,
     onSubmit: (values) => {
-    
-        addProvider(values)
-     
+      addProvider(values);
+
       navigate("/admin");
     },
   });
-  useEffect(()=>{
+  useEffect(() => {
     if (isSuccess) {
-      toast.success("Provider added Successfully")
+      toast.success("Provider added Successfully");
     }
-  },[data])
+  }, [data]);
 
   // const needsSupervisor =
   //   formik.values.clinicRole?.toLowerCase().includes("level 1") ||
@@ -76,16 +74,13 @@ export function ProviderAddScreen() {
   //   formik.values.clinicRole?.toLowerCase().includes("level2");
 
   const errorText = (field: keyof typeof formik.values) => {
-  const error = formik.errors[field];
-  return error ? <p className="text-sm text-red-600">{error}</p> : null;
-};
-
+    const error = formik.errors[field];
+    return error ? <p className="text-sm text-red-600">{error}</p> : null;
+  };
 
   return (
     <div className="min-h-screen bg-[#efefef]">
-      <AppHeader     
-        onLogout={()=>{}}
-      />
+      <AppHeader onLogout={() => {}} />
 
       <div className="max-w-4xl mx-auto px-6 py-8">
         <Button
@@ -162,9 +157,11 @@ export function ProviderAddScreen() {
                     <SelectValue placeholder="Select system role" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">Super Admin</SelectItem>
-                    <SelectItem value="2">Admin</SelectItem>
-                    <SelectItem value="3">User</SelectItem>
+                    {RoleOptions.map((role) => (
+                      <SelectItem key={role.value} value={role.value}>
+                        {role.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 {errorText("systemRole")}

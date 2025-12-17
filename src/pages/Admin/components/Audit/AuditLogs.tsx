@@ -207,7 +207,7 @@ useEffect(() => {
               logs={auditsLogs?.data?.auditLogs} // <-- array of logs
               page={auditsLogs?.data?.page}
               totalPages={auditsLogs?.data?.totalPages}
-              totalRecords={auditsLogs?.data?.totalrecords}
+              totalRecords={auditsLogs?.data?.totalRecords}
               onPageChange={setSelectedPage}
             />
             {/* <AuditLogTable

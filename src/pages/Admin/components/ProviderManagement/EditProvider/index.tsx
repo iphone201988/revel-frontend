@@ -47,6 +47,7 @@ import * as Yup from "yup";
 import { SystemRoles } from "../../../../../utils/enums/enum";
 import { useUpdateProviderMutation } from "../../../../../redux/api/provider";
 import { handleError } from "../../../../../utils/helper";
+import { addProviderSchema } from "../../../../../Schema";
 
 export function ProviderEditScreen() {
   const navigate = useNavigate();
@@ -74,14 +75,7 @@ export function ProviderEditScreen() {
       licenseNumber: provider?.licenseNumber || "",
     },
 
-    validationSchema: Yup.object({
-      name: Yup.string().required("Provider name is required"),
-      credential: Yup.string().required("credential is required"),
-      clinicRole: Yup.string().required("Clinic role is required"),
-      systemRole: Yup.string().required("System role is required"),
-      email: Yup.string().email().required("Email is required"),
-      phone: Yup.string().nullable(),
-    }),
+    validationSchema: addProviderSchema,
 
     onSubmit: (values) => {
       updateProvider({

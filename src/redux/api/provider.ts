@@ -5,6 +5,7 @@ const baseQuery = fetchBaseQuery({
   baseUrl: "http://localhost:2001/api",
   prepareHeaders: (headers) => {
     const auth = localStorage.getItem("token");
+    headers.set("ngrok-skip-browser-warning", "69420");
     if (auth) {
       headers.set("Authorization", `Bearer ${auth}`);
     }
@@ -17,14 +18,16 @@ export interface ProviderResponse {
   data: any[];
 }
 
-
 const USER_TAG = "USER";
 const CLIENT_TAG = "CLIENT";
 const GOAL_TAG = "GOAL";
+const PERMISSION_TAG = "PERMISSIONS";
+const ACTIVITY_TAG = "ACTIVITY"
+const SUPPORT_TAG = "SUPPORT"
 export const providerApi = createApi({
   reducerPath: "providerApi",
   baseQuery,
-  tagTypes: [USER_TAG, CLIENT_TAG, GOAL_TAG],
+  tagTypes: [USER_TAG, CLIENT_TAG, GOAL_TAG, PERMISSION_TAG,ACTIVITY_TAG, SUPPORT_TAG],
   endpoints: (builder) => ({
     orgRegistration: builder.mutation({
       query: (body) => ({
@@ -57,7 +60,7 @@ export const providerApi = createApi({
       }),
     }),
 
-    getUserProfile: builder.query<void, void>({
+    getUserProfile: builder.query<any, void>({
       query: () => ({
         url: "/provider/profile",
       }),
@@ -66,6 +69,13 @@ export const providerApi = createApi({
     getAllClients: builder.query<any, void>({
       query: () => ({
         url: "/provider/getClients",
+      }),
+      providesTags: [CLIENT_TAG],
+    }),
+
+    getClientProfile: builder.query<any, any>({
+      query: ({ clientId }) => ({
+        url: `/provider/clientProfile?clientId=${clientId}`,
       }),
       providesTags: [CLIENT_TAG],
     }),
@@ -111,39 +121,147 @@ export const providerApi = createApi({
       invalidatesTags: [GOAL_TAG],
     }),
 
-    getGoals : builder.query<any, void>({
-        query: ()=>({
-            url:'/provider/goal'
-        }),
-        providesTags:[GOAL_TAG]
+    getGoals: builder.query<any, void>({
+      query: () => ({
+        url: "/provider/goal",
+      }),
+      providesTags: [GOAL_TAG],
     }),
-    viewPermissions: builder.query<any, void>({
-        query:(providerId)=> ({
-           url:`/provider/viewPermission?providerId=${providerId}` // pending
-        })
+    viewPermissions: builder.query<any, string>({
+      query: (providerId) => ({
+        url: `/provider/viewPermission?providerId=${providerId}`,
+      }),
+      providesTags: [PERMISSION_TAG],
+    }),
+
+    updateProviderPermissions: builder.mutation<
+      any,
+      { providerId: string; permissions: string[] }
+    >({
+      query: (body) => ({
+        url: `/provider/update-permissions`,
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: [PERMISSION_TAG],
     }),
     viewAudits: builder.query({
-  query: ({ page, search, action, resource, startDate, endDate }) => {
-    const queryParams = new URLSearchParams();
+      query: ({ page, search, action, resource, startDate, endDate }) => {
+        const queryParams = new URLSearchParams();
 
-    if (page) queryParams.append("page", page);
-    if (search) queryParams.append("search", search);
-    if (action && action !== "all") queryParams.append("action", action);
-    if (resource && resource !== "all") queryParams.append("resource", resource);
-    if (startDate) queryParams.append("startDate", startDate);
-    if (endDate) queryParams.append("endDate", endDate);
+        if (page) queryParams.append("page", page);
+        if (search) queryParams.append("search", search);
+        if (action && action !== "all") queryParams.append("action", action);
+        if (resource && resource !== "all")
+          queryParams.append("resource", resource);
+        if (startDate) queryParams.append("startDate", startDate);
+        if (endDate) queryParams.append("endDate", endDate);
 
-    return {
-      url: `/logs/view?${queryParams.toString()}`,
-      method: "GET",
-    };
-  },
-}),
-     viewStats: builder.query<any, void>({
-         query: ()=>({
-            url:'/logs/statistics'
-        }),
-     }),
+        return {
+          url: `/logs/view?${queryParams.toString()}`,
+          method: "GET",
+        };
+      },
+    }),
+    viewStats: builder.query<any, void>({
+      query: () => ({
+        url: "/logs/statistics",
+      }),
+    }),
+
+    getAssignedClients: builder?.query<any, void>({
+      query: () => ({
+        url: "/provider/assigned",
+      }),
+    }),
+
+    addItpGoalToClient: builder.mutation({
+      query: (body) => ({
+        url: "/provider/addClientGoal",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: [CLIENT_TAG, GOAL_TAG],
+    }),
+
+    updateClient: builder.mutation({
+      query: ({ clientId, data }) => ({
+        url: `/provider/updateClient?clientId=${clientId}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: [CLIENT_TAG],
+    }),
+    sessionHistory: builder.query<any, any>({
+      query: (clientId) => ({
+        url: `/session/client?clientId=${clientId}`,
+      }),
+    }),
+    updateItpGoal: builder.mutation({
+      query: ({ clientId, data, itpGoalId }) => ({
+        url: `/provider/update-itp?clientId=${clientId}&itpGoalId=${itpGoalId}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: [CLIENT_TAG],
+    }),
+    startSession: builder.mutation({
+      query: (body) => ({
+        url: "/session/start",
+        method: "POST",
+        body,
+      }),
+    }),
+    collectSessionData: builder.mutation({
+      query: (body) => ({
+        url: "/session/collect",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    generateNotes: builder.mutation({
+      query: (sessionId) => ({
+        url: `/session/notes?sessionId=${sessionId}`,
+        method: "POST",
+      }),
+    }),
+    abandonSession: builder.mutation({
+      query: (sessionId) => ({
+        url: `/session/abandon?sessionId=${sessionId}`,
+        method: "DELETE",
+      }),
+    }),
+    addActivity: builder.mutation({
+      query: (body) => ({
+        url: "/session/addActivity",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: [ACTIVITY_TAG]
+    }),
+    addSupport: builder.mutation({
+      query: (body) => ({
+        url: "/session/addSupport",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags:[SUPPORT_TAG]
+    }),
+    getActivities: builder.query<any, void>({
+      query: () => ({
+        url: "/session/activity",
+        method: "GET",
+      }),
+      providesTags: [ACTIVITY_TAG]
+    }),
+    getSupports: builder.query<any, void>({
+      query: () => ({
+        url: "/session/support",
+        method: "GET",
+      }),
+      providesTags: [SUPPORT_TAG]
+    }),
   }),
 });
 
@@ -162,5 +280,20 @@ export const {
   useGetGoalsQuery,
   useViewPermissionsQuery,
   useViewAuditsQuery,
-  useViewStatsQuery
+  useViewStatsQuery,
+  useUpdateProviderPermissionsMutation,
+  useGetAssignedClientsQuery,
+  useStartSessionMutation,
+  useGetClientProfileQuery,
+  useAddItpGoalToClientMutation,
+  useUpdateClientMutation,
+  useUpdateItpGoalMutation,
+  useCollectSessionDataMutation,
+  useGenerateNotesMutation,
+  useAbandonSessionMutation,
+  useSessionHistoryQuery,
+  useGetActivitiesQuery,
+  useGetSupportsQuery,
+  useAddActivityMutation,
+  useAddSupportMutation
 } = providerApi;

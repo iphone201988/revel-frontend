@@ -1,7 +1,7 @@
 
-import { Card } from '../../components/Card';
+import { Card } from '../../../../components/Card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, BarChart, Bar } from 'recharts';
-import { Badge } from '../../components/Badge';
+import { Badge } from '../../../../components/Badge';
 import { AlertCircle } from 'lucide-react';
 
 interface ProgressScreenProps {
@@ -101,7 +101,7 @@ const mockClientVariables = [
 
 // Generate mock data for the last 30 days for a specific client
 const generateMockSessionData = (clientId: string) => {
-  const data = [];
+  const data :any= [];
   const today = new Date('2025-10-17');
   
   // Generate data points for sessions over the past 30 days
@@ -376,7 +376,7 @@ export function ProgressScreen({ clientId = '1', clientName = 'Sarah Johnson' }:
                   fill: '#395159',
                   position: 'right'
                 }}
-                isAnimationActive={false}
+                // isAnimationActive={false}
               />
               <Line 
                 type="monotone" 

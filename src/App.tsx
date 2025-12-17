@@ -15,6 +15,8 @@ import { ClientScreen } from './pages/Client'
 import { PermissionsHomeScreen } from './pages/Admin/components/PermissionTab/PermissionsHomeScreen'
 import { ProviderPermissionsScreen } from './pages/Admin/components/PermissionTab/ProviderPermission/ProviderPermission'
 import { AuditLogScreen } from './pages/Admin/components/Audit/AuditLogs'
+import { SessionDataCollectionScreen } from './pages/Session/SessionDataCollection/SessionDataCollection'
+import { AINoteSummaryScreen } from './pages/AiNoteSummery/AiNoteSummery'
 
 function App() {
   
@@ -35,6 +37,8 @@ function App() {
         <Route  path='/permissions' element={<PermissionsHomeScreen/>}/>
         <Route  path='/session-initiation' element={<SessionInitiationScreen/>}/>
         <Route  path='/client' element={<ClientScreen/>}/>
+        <Route  path='/session-data-collection' element={<SessionDataCollectionScreen/>}/>
+        <Route  path='/ai-note-summery' element={<AINoteSummaryScreen/>}/>
       </Routes>
       </BrowserRouter>
     </>

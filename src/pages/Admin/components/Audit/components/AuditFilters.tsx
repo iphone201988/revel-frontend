@@ -10,6 +10,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../../../../components/Select";
+import {
+  AuditActionOptions,
+  AuditResourceOptions,
+} from "../../../../../Constant";
 
 type Props = {
   search: any;
@@ -62,14 +66,11 @@ function AuditFilters({
               <SelectValue placeholder="All actions" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All actions</SelectItem>
-              <SelectItem value="Provider Login"> Login</SelectItem>
-              <SelectItem value="Provider Logout"> Logout</SelectItem>
-              <SelectItem value="View Client">View Client</SelectItem>
-              <SelectItem value="Create Client">Create Client</SelectItem>
-              <SelectItem value="Update Client">Update Client</SelectItem>
-              <SelectItem value="Start Session">Start Session</SelectItem>
-              <SelectItem value="View Audit Logs">View Audit Logs</SelectItem>
+              {Object.entries(AuditActionOptions).map(([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -81,13 +82,11 @@ function AuditFilters({
               <SelectValue placeholder="All resources" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All resources</SelectItem>
-              <SelectItem value="Auth">Authentication</SelectItem>
-              <SelectItem value="Client">Client</SelectItem>
-              <SelectItem value="Session">Session</SelectItem>
-              <SelectItem value="Provider">Provider</SelectItem>
-              <SelectItem value="Goal">Goal</SelectItem>
-              <SelectItem value="Audit Logs">Audit Logs</SelectItem>
+              {Object.entries(AuditResourceOptions).map(([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

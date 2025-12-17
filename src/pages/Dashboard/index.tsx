@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useGetAllClientsQuery, useGetUserProfileQuery } from "../../redux/api/provider";
+import { useGetAssignedClientsQuery, useGetUserProfileQuery } from "../../redux/api/provider";
 import { Button } from "../../components/Button";
 import { Users, Settings, Plus, Clock, BarChart3 } from "lucide-react";
 import { Card } from "../../components/Card";
@@ -9,13 +9,13 @@ import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const onNavigate = useNavigate();
-  const { data,  }:any = useGetUserProfileQuery();
+  const { data  }:any = useGetUserProfileQuery();
 
   useEffect(() => {
     // console.log(data);
   }, [data]);
 
-  const {data: clients}:any = useGetAllClientsQuery()
+  const {data: clients}:any = useGetAssignedClientsQuery()
 
  
   
@@ -23,10 +23,9 @@ const Dashboard = () => {
     <div>
       <div className="min-h-screen bg-[#efefef]">
         <AppHeader 
-        title="Dashboard" 
+  
         onLogout={()=>{}} 
-        onNavigate={()=>{}}
-        currentUser={()=>{}}
+        
       />
 
         <div className="max-w-screen-2xl mx-auto px-6 py-8">
@@ -59,7 +58,7 @@ const Dashboard = () => {
           <div className="mb-8">
             <div className="flex justify-end mb-4">
               <Button
-                onClick={() => onNavigate("session-initiation")} //>>>>>>>>>>>>>>>>>>>>>>>>>
+                onClick={() => onNavigate("/session-initiation", {state:{clients:clients?.data, currentUser:data?.data}})} //>>>>>>>>>>>>>>>>>>>>>>>>>
                 className="h-16 bg-[#395159] hover:bg-[#303630] text-white flex items-center gap-2 px-6"
               >
                 <Plus className="w-5 h-5" />
@@ -100,12 +99,12 @@ const Dashboard = () => {
               <div
                 key={client._id}
                 className="p-4 bg-[#efefef] rounded-lg border border-[#ccc9c0] hover:border-[#395159] cursor-pointer transition-all"
-                onClick={() => onNavigate('client', client._id)}
+                onClick={() => onNavigate('/client',{state:{clientId: client._id ,currentUser:data?.data}} )}
               >
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-[#303630]">{client?.name}</p>
-                    <p className="text-sm text-[#395159]">Age: {client?.dob}</p> {/** replace age here */}
+                    <p className="text-sm text-[#395159]">Age: {client?.age}</p> {/** replace age here */}
                   </div>
                   <div className="text-right">
                     <div className="flex items-center gap-1 text-sm text-[#395159]">
@@ -117,7 +116,7 @@ const Dashboard = () => {
                       className="mt-2 bg-[#395159] hover:bg-[#303630] text-white"
                       onClick={(e) => {
                         e.stopPropagation();
-                        onNavigate('session-initiation', client._id);
+                        onNavigate('/session-initiation', {state:{client:client, }});
                       }}
                     >
                       Start Session

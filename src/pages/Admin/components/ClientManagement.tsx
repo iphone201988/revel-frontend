@@ -45,25 +45,7 @@ import {
 } from "../../../redux/api/provider";
 import { useNavigate } from "react-router-dom";
 import PhoneInput from "react-phone-input-2";
-
-
-
-
-const clientSchema = Yup.object({
-  name: Yup.string().trim().required("Client name is required"),
-  dob: Yup.string().trim().required("Date of birth is required"),
-  diagnosis: Yup.string().trim().optional(),
-  parentName: Yup.string().trim().optional(),
-  email: Yup.string().trim().email("Enter a valid email").optional(),
-  phone: Yup.string().trim().optional(),
-  countryCode: Yup.string().trim().optional(),
-  assignedProvider: Yup.array()
-    .of(Yup.string())
-    .min(1, "Assign at least one provider"),
-  qsp: Yup.string().trim().optional(),
-  clinicalSupervisor: Yup.string().trim().optional(),
-  reviewDate: Yup.string().trim().optional(),
-});
+import { clientSchema } from "../../../Schema";
 
 export function ClientManagement() {
   const { data: clients }: any = useGetAllClientsQuery();
@@ -204,7 +186,12 @@ export function ClientManagement() {
                     name="diagnosis"
                     value={formik.values.diagnosis}
                     onChange={formik.handleChange}
+
                   />
+                  
+                  {errorText("diagnosis") && (
+                    <p className="text-sm text-red-600">{errorText("diagnosis")}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -215,6 +202,10 @@ export function ClientManagement() {
                     value={formik.values.parentName}
                     onChange={formik.handleChange}
                   />
+                  
+                  {errorText("parentName") && (
+                    <p className="text-sm text-red-600">{errorText("parentName")}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -256,6 +247,9 @@ export function ClientManagement() {
                     }}
                     placeholder="(555) 123-4567"
                   />
+                  {errorText("phone") && (
+                    <p className="text-sm text-red-600">{errorText("phone")}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2 p-4 bg-[#efefef] rounded-lg border border-[#ccc9c0]">
@@ -297,7 +291,7 @@ export function ClientManagement() {
                           <CommandGroup>
                             {providers?.data
                               .filter(
-                                (p:any) =>
+                                (p: any) =>
                                   !formik.values.assignedProvider.includes(
                                     p._id
                                   )
@@ -328,7 +322,7 @@ export function ClientManagement() {
                     <div className="flex flex-wrap gap-2 mt-3">
                       {formik.values.assignedProvider.map((providerId) => {
                         const provider = providers?.data?.find(
-                          (p:any) => p._id === providerId
+                          (p: any) => p._id === providerId
                         );
                         return provider ? (
                           <Badge
@@ -368,7 +362,7 @@ export function ClientManagement() {
                     </SelectTrigger>
 
                     <SelectContent>
-                      {providers?.data?.map((p:any) => (
+                      {providers?.data?.map((p: any) => (
                         <SelectItem key={p._id} value={p._id}>
                           {p.name} {p.credentials}
                         </SelectItem>
@@ -392,7 +386,7 @@ export function ClientManagement() {
                     </SelectTrigger>
 
                     <SelectContent>
-                      {providers?.data?.map((p:any) => (
+                      {providers?.data?.map((p: any) => (
                         <SelectItem key={p._id} value={p._id}>
                           {p.name} {p.credentials}
                         </SelectItem>
@@ -409,7 +403,11 @@ export function ClientManagement() {
                     type="date"
                     value={formik.values.reviewDate}
                     onChange={formik.handleChange}
+                    
                   />
+                  | {errorText("reviewDate") && (
+                    <p className="text-sm text-red-600">{errorText("reviewDate")}</p>
+                  )}
                   <p className="text-sm text-[#395159]">
                     ITP review date - alerts will appear at 60 and 30 days
                     before

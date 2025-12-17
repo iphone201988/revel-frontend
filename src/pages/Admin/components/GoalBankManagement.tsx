@@ -24,28 +24,24 @@ import {
 import { Textarea } from "../../../components/Textarea";
 import { Input } from "../../../components/Input";
 import { toast } from "react-toastify";
-import { useAddGoalMutation, useGetGoalsQuery } from "../../../redux/api/provider";
+import {
+  useAddGoalMutation,
+  useGetGoalsQuery,
+} from "../../../redux/api/provider";
 import { handleError } from "../../../utils/helper";
 import { SupportLevel } from "../../../utils/enums/enum";
 import { useNavigate } from "react-router-dom";
-
-const goalSchema = Yup.object({
-  category: Yup.string().trim().required("Goal category is required"),
-  discription: Yup.string().trim().required("Goal description is required"),
-  masteryPercentage: Yup.number().min(0).max(100).required("Mastery % required"),
-  masterySessionCount: Yup.number().min(1).required("Session count required"),
-  supportLevel: Yup.string().required("Support level required"),
-  masteryBaseline: Yup.number().min(0).max(100).required("Baseline required"),
-});
-
+import { GoalBankCategory, SupportLevelOptions } from "../../../Constant";
+import { SelectBox } from "../../../components/SelectBox";
+import { goalSchema } from "../../../Schema";
 
 export function GoalBankManagement() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const [addGoal, { data, isSuccess }] = useAddGoalMutation();
 
-  const { data : goals }= useGetGoalsQuery();
-  console.log(goals,"goalllll");
-  
+  const { data: goals } = useGetGoalsQuery();
+  console.log(goals, "goalllll");
+
   const [isAddingGoal, setIsAddingGoal] = useState(false);
 
   const formik = useFormik({
@@ -93,23 +89,20 @@ export function GoalBankManagement() {
     }
   }, [data]);
 
-  
- 
   const errorText = (field: keyof typeof formik.values) =>
     formik.errors[field] as string | undefined;
 
   return (
     <>
-    <Button
-          onClick={() => navigate("/")}
-          variant="outline"
-          className="border-[#395159] text-[#395159] mb-3"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Dashboard
-        </Button>
+      <Button
+        onClick={() => navigate("/")}
+        variant="outline"
+        className="border-[#395159] text-[#395159] mb-3"
+      >
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Back to Dashboard
+      </Button>
       <Card className="p-6 bg-white mb-6">
-        
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-[#303630] mb-2">Goal Bank Management</h3>
@@ -134,52 +127,15 @@ export function GoalBankManagement() {
               </DialogHeader>
               <form onSubmit={formik.handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="category">Goal Category</Label>
-                  <Select
+                  <SelectBox
+                    htmlFor="category"
+                    label="Goal Category"
                     value={formik.values.category}
-                    onValueChange={(val) =>
-                      formik.setFieldValue("category", val)
-                    }
-                    required
-                  >
-                    <SelectTrigger className="h-12">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="FEDC 1 - Shared Attention & Regulation">
-                        FEDC 1 - Shared Attention & Regulation
-                      </SelectItem>
-                      <SelectItem value="FEDC 2 - Engagement & Relating">
-                        FEDC 2 - Engagement & Relating
-                      </SelectItem>
-                      <SelectItem value="FEDC 3 - Two-Way Communication">
-                        FEDC 3 - Two-Way Communication
-                      </SelectItem>
-                      <SelectItem value="FEDC 4 - Complex Communication">
-                        FEDC 4 - Complex Communication
-                      </SelectItem>
-                      <SelectItem value="FEDC 5 - Emotional Ideas">
-                        FEDC 5 - Emotional Ideas
-                      </SelectItem>
-                      <SelectItem value="FEDC 6 - Emotional Thinking">
-                        FEDC 6 - Emotional Thinking
-                      </SelectItem>
-                      <SelectItem value="FEDC 7 - Multi-Causal Thinking">
-                        FEDC 7 - Multi-Causal Thinking
-                      </SelectItem>
-                      <SelectItem value="FEDC 8 - Gray Area Thinking">
-                        FEDC 8 - Gray Area Thinking
-                      </SelectItem>
-                      <SelectItem value="FEDC 9 - Reflective Thinking">
-                        FEDC 9 - Reflective Thinking
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errorText("category") && (
-                    <p className="text-sm text-red-600">
-                      {errorText("category")}
-                    </p>
-                  )}
+                    onChange={(val) => formik.setFieldValue("category", val)}
+                    options={GoalBankCategory}
+                    error={errorText("category")}
+                    placeholder="Select category"
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -266,13 +222,11 @@ export function GoalBankManagement() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value={SupportLevel?.Independent}>
-                          Independently
-                        </SelectItem>
-                        <SelectItem value={SupportLevel?.Minimal}>Minimal Support</SelectItem>
-                        <SelectItem value={SupportLevel?.Moderate}>
-                          Moderate Support
-                        </SelectItem>
+                        {SupportLevelOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     {errorText("supportLevel") && (
@@ -343,65 +297,56 @@ export function GoalBankManagement() {
         </div>
 
         <div className="space-y-8">
-          {goals?.data?.map((goal:any) => (
+          {goals?.data?.map((goal: any) => (
             <div key={goal}>
               <h3 className="text-[#395159] mb-3 pb-2 border-b border-[#ccc9c0]">
-                  {goal?.category}
+                {goal?.category}
               </h3>
               <div className="space-y-3">
-                
-                    <div
-                      key={goal.id}
-                      className="p-5 bg-[#efefef] rounded-lg border border-[#ccc9c0] hover:border-[#395159] transition-all"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          <p className="text-[#303630] mb-3">{goal.discription}</p>
-                          <div className="flex items-center gap-6 text-sm text-[#395159]">
-                            <div>
-                              <span className="font-medium">
-                                Mastery Criteria:
-                              </span>{" "}
-                              {goal?.criteriaForMastry?.masteryPercentage}% across{" "}
-                              {goal?.criteriaForMastry?.acrossSession} sessions
-                            </div>
-                            <div>
-                              <span className="font-medium">
-                                Support Level:
-                              </span>{" "}
-                              {goal?.criteriaForMastry?.supportLevel === SupportLevel?.Independent
-                                ? "Independently"
-                                : goal.supportLevel === SupportLevel?.Minimal
-                                ? "Minimal Support"
-                                : "Moderate Support"}
-                            </div>
-                          </div>
+                <div
+                  key={goal.id}
+                  className="p-5 bg-[#efefef] rounded-lg border border-[#ccc9c0] hover:border-[#395159] transition-all"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <p className="text-[#303630] mb-3">{goal.discription}</p>
+                      <div className="flex items-center gap-6 text-sm text-[#395159]">
+                        <div>
+                          <span className="font-medium">Mastery Criteria:</span>{" "}
+                          {goal?.criteriaForMastry?.masteryPercentage}% across{" "}
+                          {goal?.criteriaForMastry?.acrossSession} sessions
                         </div>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="border-[#395159] text-[#395159]"
-                            onClick={() =>
-                              toast.success("Edit goal coming soon")
-                            }
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="border-red-500 text-red-500 hover:bg-red-50"
-                            onClick={() =>
-                              toast.success("Delete goal coming soon")
-                            }
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                        <div>
+                          <span className="font-medium">Support Level:</span>{" "}
+                          {goal?.criteriaForMastry?.supportLevel ===
+                          SupportLevel?.Independent
+                            ? "Independently"
+                            : goal.supportLevel === SupportLevel?.Minimal
+                            ? "Minimal Support"
+                            : "Moderate Support"}
                         </div>
                       </div>
                     </div>
-                 
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-[#395159] text-[#395159]"
+                        onClick={() => toast.success("Edit goal coming soon")}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-red-500 text-red-500 hover:bg-red-50"
+                        onClick={() => toast.success("Delete goal coming soon")}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           ))}
