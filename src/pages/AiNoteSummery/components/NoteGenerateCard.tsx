@@ -6,9 +6,10 @@ import { Sparkles, PenTool } from 'lucide-react';
 interface NoteGenerateCardProps {
   onGenerate: () => void;
   onManual: () => void;
+   isLoading: boolean
 }
 
-export function NoteGenerateCard({ onGenerate, onManual }: NoteGenerateCardProps) {
+export function NoteGenerateCard({ onGenerate, onManual , isLoading}: NoteGenerateCardProps) {
   return (
     <Card className="p-8 bg-white text-center">
       <div className="max-w-md mx-auto">
@@ -25,7 +26,8 @@ export function NoteGenerateCard({ onGenerate, onManual }: NoteGenerateCardProps
             className="h-14 bg-[#395159] hover:bg-[#303630] text-white px-8"
           >
             <Sparkles className="w-5 h-5 mr-2" />
-            Generate AI Note
+            {isLoading ? "Genrating..." : " Generate AI Note"}
+           
           </Button>
           <Button
             onClick={onManual}

@@ -43,6 +43,13 @@ export const providerApi = createApi({
         body,
       }),
     }),
+    logout: builder.mutation<void, void>({
+      query:()=>({
+         url:'/provider/logout',
+         method: 'PUT'
+      }),
+      invalidatesTags: [USER_TAG]
+    }),
 
     verifyOtp: builder.mutation({
       query: (body) => ({
@@ -120,12 +127,28 @@ export const providerApi = createApi({
       }),
       invalidatesTags: [GOAL_TAG],
     }),
-
+  
     getGoals: builder.query<any, void>({
       query: () => ({
         url: "/provider/goal",
       }),
       providesTags: [GOAL_TAG],
+    }), 
+    deleteGoal :builder.mutation({
+      query: (goalId)=>({
+          url:`/provider/deleteGoal?goalId=${goalId}`,
+          method:"DELETE"
+      }),
+      invalidatesTags:[GOAL_TAG]
+    }),
+
+    editGoal : builder.mutation({
+     query: ({goalId, data})=>({
+        url:`/provider/editGoalBank?goalId=${goalId}`,
+        method:"PUT",
+        body:data
+     }),
+     invalidatesTags: [GOAL_TAG]
     }),
     viewPermissions: builder.query<any, string>({
       query: (providerId) => ({
@@ -218,6 +241,7 @@ export const providerApi = createApi({
         method: "POST",
         body,
       }),
+      invalidatesTags:[CLIENT_TAG]
     }),
 
     generateNotes: builder.mutation({
@@ -262,6 +286,29 @@ export const providerApi = createApi({
       }),
       providesTags: [SUPPORT_TAG]
     }),
+    saveSignature: builder.mutation({
+      query:(body)=>({
+        url: '/session/report',
+        method: "PUT",
+        body
+      })
+    }),
+
+    getArchivedGoals : builder.query<any, any>({
+      query: (clientId)=>({
+        url:`/provider/archived?clientId=${clientId}`
+      })
+    }),
+    progressReport: builder.query<any, any>({
+       query: (clientId)=>({
+        url:`/provider/progressReport?clientId=${clientId}`
+      })
+    }),
+    goalReview: builder.query<any, any>({
+       query: (clientId)=>({
+        url:`/provider/goalProgress?clientId=${clientId}`
+      })
+    }),
   }),
 });
 
@@ -295,5 +342,12 @@ export const {
   useGetActivitiesQuery,
   useGetSupportsQuery,
   useAddActivityMutation,
-  useAddSupportMutation
+  useAddSupportMutation,
+  useSaveSignatureMutation,
+  useGetArchivedGoalsQuery,
+  useProgressReportQuery,
+  useDeleteGoalMutation,
+  useEditGoalMutation,
+  useLogoutMutation,
+ useGoalReviewQuery
 } = providerApi;

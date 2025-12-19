@@ -13,14 +13,9 @@ export function PermissionsHomeScreen() {
   const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-[#efefef]">
-      <AppHeader
-       
-        onLogout={() => {}}
-       
-      />
+      <AppHeader />
 
       <div className="max-w-screen-2xl mx-auto px-6 py-8">
-       
         <div className="flex items-center justify-between mb-6">
           <Button
             onClick={() => navigate("/admin")}
@@ -82,7 +77,11 @@ export function PermissionsHomeScreen() {
                   </div>
                 </div>
                 <Button
-                  onClick={() => navigate("/provider-permissions", {state:{provider:provider}})}
+                  onClick={() =>
+                    navigate("/provider-permissions", {
+                      state: { provider: provider },
+                    })
+                  }
                   className="bg-[#395159] hover:bg-[#303630] text-white"
                 >
                   View Permissions

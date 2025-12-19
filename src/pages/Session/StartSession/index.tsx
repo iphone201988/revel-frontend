@@ -113,7 +113,7 @@ export function SessionInitiationScreen() {
 
   return (
     <div className="min-h-screen bg-[#efefef]">
-      <AppHeader onLogout={() => {}} />
+      <AppHeader  />
 
       <div className="max-w-4xl mx-auto px-6 py-8">
         <Button

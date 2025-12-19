@@ -7,15 +7,22 @@ import { LogOut, HelpCircle, Settings } from 'lucide-react';
 import { HIPAAComplianceIndicator } from '../HIPPA';
 import { Button } from '../Button';
 import { useNavigate } from 'react-router-dom';
+import { useLogoutMutation } from '../../redux/api/provider';
+import { handleError } from '../../utils/helper';
+import { toast } from 'react-toastify';
 
-interface AppHeaderProps {
- 
-  onLogout: () => void;
- 
-}
 
-export function AppHeader({ onLogout }:AppHeaderProps) {
-    const navigate = useNavigate()
+export function AppHeader() {
+  
+  const [logout] = useLogoutMutation()
+    const navigate = useNavigate();
+
+
+    const handleLogout = async()=>{
+     await logout().unwrap().catch((error)=> handleError(error))
+     toast.success('Logout Successfully')
+     navigate('/login')
+    }
   return (
     <header className="bg-[#395159] text-white shadow-lg">
       <div className="max-w-screen-2xl mx-auto px-6 py-6">
@@ -45,7 +52,7 @@ export function AppHeader({ onLogout }:AppHeaderProps) {
               </>
             
             <Button 
-              onClick={()=>{}}
+              onClick={()=>handleLogout()}
               className="bg-white/10 text-white border border-white/30 hover:bg-white hover:text-[#395159]"
             >
               <LogOut className="w-4 h-4 mr-2" />

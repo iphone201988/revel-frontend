@@ -237,7 +237,7 @@ export function GoalsSection({ clientId, clientGoals }: GoalsSectionProps) {
         <h3 className="text-[#303630]">Current ITP Goals</h3>
         <div className="flex gap-2">
           <Button
-            onClick={() => navigate("/goal-review")} //clientId
+            onClick={() => navigate("/goal-review", {state:{clientId}})} //clientId
             variant="outline"
             className="border-[#395159] text-[#395159]"
           >

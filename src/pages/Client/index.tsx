@@ -1,8 +1,5 @@
 import { ProgressScreen } from "./components/ProgressScreen";
-import {
-  mockArchivedGoals,
-  mockSessions,
-} from "./components/mockData";
+
 import { ClientHeader } from "./components/ClientHeader";
 import { GoalsSection } from "./components/GoalsTab";
 import { ProvidersSection } from "./components/ProviderTab";
@@ -15,26 +12,21 @@ import {
   TabsList,
   TabsTrigger,
 } from "../../components/Tabs";
-import { useGetClientProfileQuery, useGetProvidersQuery, useGetUserProfileQuery, useSessionHistoryQuery } from "../../redux/api/provider";
+import { useGetArchivedGoalsQuery, useGetClientProfileQuery, useGetProvidersQuery, useGetUserProfileQuery, useSessionHistoryQuery } from "../../redux/api/provider";
 import { useLocation } from "react-router-dom";
-interface ClientScreenProps {
-  clientId: string | null;
-  currentUser: any;
-  onNavigate: (screen: Screen, clientId?: string) => void;
-  onLogout: () => void;
-}
 
 export function ClientScreen() {
   const location = useLocation();
   const clientId = location?.state?.clientId;
   // const currentUser = location?.state?.currentUser;
   const {data:profile}= useGetUserProfileQuery()
-const currentUser = profile?.data
-  console.log(currentUser, "user??????????????");
+  const currentUser = profile?.data
+
   
   const { data } = useGetClientProfileQuery({ clientId }, { skip: !clientId });
   const clientData: any = data?.data;
-
+  
+  const {data:archivedGoals}  = useGetArchivedGoalsQuery( clientData?._id)
   const {data:providers}:any = useGetProvidersQuery()
   const providerList  = providers?.data
 
@@ -144,7 +136,7 @@ const canViewAllSessions = isAdmin || userPermissions.includes("ViewAllSessions"
           </TabsContent>
           
           <TabsContent value="archived">
-            <ArchivedGoalsSection goals={mockArchivedGoals} />
+            <ArchivedGoalsSection goals={archivedGoals?.data} />
           </TabsContent> 
         </Tabs>
       </div>

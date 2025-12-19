@@ -7,31 +7,25 @@ import { NoteGenerateCard } from "./components/NoteGenerateCard";
 import { NoteEditorCard } from "./components/NoteEditorCard";
 import { toast } from "react-toastify";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useGenerateNotesMutation } from "../../redux/api/provider";
+import { useGenerateNotesMutation, useSaveSignatureMutation } from "../../redux/api/provider";
 import { handleError } from "../../utils/helper";
-
-interface AINoteSummaryScreenProps {
-  clientId: string | null;
-  sessionData: any;
-  currentUser: any;
-  clinicAccount: any;
-  onNavigate: (screen: any) => void;
-  onLogout: () => void;
-}
 
 export function AINoteSummaryScreen({
   clientId,
   sessionData,
   currentUser,
   clinicAccount,
-  onLogout,
-}: AINoteSummaryScreenProps) {
+}: any) {
   const location = useLocation();
   const collectedSessionData = location?.state?.sessionData;
+  console.log(collectedSessionData, "collected session data");
+  
   const navigate = useNavigate();
 
-  const [generateNotes, { data: notes, isSuccess }] =
+  const [generateNotes, { data: notes, isSuccess, isLoading }] =
     useGenerateNotesMutation();
+
+  const [saveSignature] = useSaveSignatureMutation();
 
   const [isNoteGenerated, setIsNoteGenerated] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -138,7 +132,7 @@ export function AINoteSummaryScreen({
       minute: "2-digit",
       hour12: true,
     });
-
+    saveSignature({signature, reportId: notes?.data?.reportId})
     setFinalizedTimestamp(timestamp);
     setIsSigned(true);
 
@@ -157,17 +151,101 @@ export function AINoteSummaryScreen({
     toast.success("Downloading note as PDF...");
   };
 
+  // Helper function to calculate age from DOB
+  const calculateAge = (dob: string) => {
+    if (!dob) return "N/A";
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  // Prepare enriched session data with proper mapping
   const enrichedSessionData = {
-    ...sessionData,
-    ...collectedSessionData,
-    clientName: generatedNoteData?.aiResponse?.clientDetails?.name || sessionData?.clientName || "Client",
-    clientDob: sessionData?.clientDob || "N/A",
-    date: generatedNoteData?.aiResponse?.sessionDetails?.date || sessionData?.date || new Date().toISOString(),
+    // Client Information - prioritize collectedSessionData
+    clientName: collectedSessionData?.sessionData?.client?.name || 
+                generatedNoteData?.aiResponse?.clientDetails?.name || 
+                sessionData?.clientName || 
+                "Client",
+    
+    clientDob: collectedSessionData?.sessionData?.client?.dob || 
+               sessionData?.clientDob || 
+               "N/A",
+    
+    clientAge: collectedSessionData?.sessionData?.client?.age || 
+               calculateAge(collectedSessionData?.sessionData?.client?.dob) || 
+               generatedNoteData?.aiResponse?.clientDetails?.age || 
+               "N/A",
+    
+    diagnosis: collectedSessionData?.sessionData?.client?.diagnosis || 
+               generatedNoteData?.aiResponse?.clientDetails?.diagnosis || 
+               sessionData?.diagnosis || 
+               "N/A",
+    
+    // Provider Information - from collectedSessionData
+    providerName: collectedSessionData?.sessionData?.provider?.name || 
+                  currentUser?.name || 
+                  "Provider Name",
+    
+    providerCredential: collectedSessionData?.sessionData?.provider?.clinicRole || 
+                       currentUser?.credential || 
+                       "Credential",
+    
+    // Session Date Information
+    dateOfSession: collectedSessionData?.sessionData?.dateOfSession || 
+                   generatedNoteData?.aiResponse?.sessionDetails?.date || 
+                   sessionData?.date || 
+                   new Date().toISOString(),
+    
+    documentationDate: new Date().toISOString(),
+    
+    // Session Details from collectedData
+    duration: collectedSessionData?.collectedData?.duration || 
+              generatedNoteData?.itpGoalsData?.duration || 
+              sessionData?.duration || 
+              "N/A",
+    
+    activityEngaged: collectedSessionData?.collectedData?.activityEngaged || 
+                     generatedNoteData?.itpGoalsData?.activityEngaged || 
+                     [],
+    
+    supportsObserved: collectedSessionData?.collectedData?.supportsObserved || 
+                      generatedNoteData?.itpGoalsData?.supportsObserved || 
+                      [],
+    
+    providerObservation: collectedSessionData?.collectedData?.providerObservation || 
+                        generatedNoteData?.itpGoalsData?.providerObservation || 
+                        "",
+    
+    // Goals Data Collection
+    goalsDataCollection: collectedSessionData?.collectedData?.goals_dataCollection || 
+                        generatedNoteData?.itpGoalsData?.goals_dataCollection || 
+                        [],
+    
+    // Session ID
+    sessionId: collectedSessionData?.collectedData?.sessionId || 
+               sessionData?.sessionId,
+    
+    // Original data for reference (keeping original structure for sidebar)
+    originalSessionData: collectedSessionData?.sessionData,
+    originalCollectedData: collectedSessionData?.collectedData,
+    
+    // Keep original structure for NoteSidebarSummary component
+    collectedData: collectedSessionData?.collectedData,
+    sessionData: collectedSessionData?.sessionData,
+    startTime : collectedSessionData?.sessionData?.startTime,
+    endTime : collectedSessionData?.sessionData?.endTime,
+    attendees: collectedSessionData?.sessionadta?.present,
+    variables: collectedSessionData?.sessionadta?.clientVariables
   };
 
   return (
     <div className="min-h-screen bg-[#efefef]">
-      <AppHeader onLogout={onLogout} />
+      <AppHeader />
 
       <div className="max-w-screen-2xl mx-auto px-6 py-8">
         <Button
@@ -182,7 +260,6 @@ export function AINoteSummaryScreen({
         <div className="grid grid-cols-3 gap-6">
           <NoteSidebarSummary
             sessionData={enrichedSessionData}
-            // generatedNoteData={generatedNoteData}
           />
 
           <div className="col-span-2 space-y-4">
@@ -190,6 +267,7 @@ export function AINoteSummaryScreen({
               <NoteGenerateCard
                 onGenerate={generateAINote}
                 onManual={createManualNote}
+                isLoading={isLoading}
               />
             ) : (
               <NoteEditorCard
@@ -214,7 +292,7 @@ export function AINoteSummaryScreen({
                 setSessionOverview={setSessionOverview}
                 setTreatmentChanges={setTreatmentChanges}
                 setClinicalRecommendations={setClinicalRecommendations}
-                setSignature={setSignature}
+                setSignature={setSignature}             
               />
             )}
           </div>

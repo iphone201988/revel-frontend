@@ -5,14 +5,9 @@ import { Card } from '../../../components/Card';
 import { Button } from '../../../components/Button';
 import { Badge } from '../../../components/Badge';
 
-interface RemovedGoalsPanelProps {
-  removedGoals: { id: number; category: string; goal: string }[];
-  isOpen: boolean;
-  onToggle: (open: boolean) => void;
-  onReAdd: (goalId: number) => void;
-}
 
-export function RemovedGoalsPanel({ removedGoals, isOpen, onToggle, onReAdd }: RemovedGoalsPanelProps) {
+
+export function RemovedGoalsPanel({ removedGoals, isOpen, onToggle, onReAdd }:any) {
   if (removedGoals.length === 0) return null;
 
   return (
@@ -34,20 +29,20 @@ export function RemovedGoalsPanel({ removedGoals, isOpen, onToggle, onReAdd }: R
       </Button>
       {isOpen && (
         <div className="pt-4 space-y-2">
-          {removedGoals.map((goal) => (
+          {removedGoals.map((goal:any) => (
             <div
-              key={goal.id}
+              key={goal?.id}
               className="flex items-center justify-between p-3 bg-white rounded border border-amber-200"
             >
               <div className="flex-1">
                 <Badge className="bg-[#395159] text-white mb-1 text-xs">
                   {goal.category}
                 </Badge>
-                <p className="text-[#303630] text-sm">{goal.goal}</p>
+                <p className="text-[#303630] text-sm">{goal?.goal}</p>
               </div>
               <Button
                 size="sm"
-                onClick={() => onReAdd(goal.id)}
+                onClick={() => onReAdd(goal?.id)}
                 className="ml-3 bg-[#395159] hover:bg-[#303630] text-white"
               >
                 <PlusCircle className="w-4 h-4 mr-1" />

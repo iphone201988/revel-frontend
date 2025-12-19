@@ -15,6 +15,7 @@ import {
   Download,
 } from "lucide-react";
 import { toast } from "react-toastify";
+import moment from "moment";
 
 interface NoteEditorCardProps {
   isEditing: boolean;
@@ -65,12 +66,10 @@ export function NoteEditorCard({
   aiNoteData,
   setSignature,
 }: NoteEditorCardProps) {
-  // Extract data from API response
+  // Extract AI response data (for clinical content only)
   const aiResponse = aiNoteData?.aiResponse || {};
-  const clientDetails = aiResponse.clientDetails || {};
-  const sessionDetails = aiResponse.sessionDetails || {};
   const clinicalNote = aiResponse.clinicalNote || {};
-  const itpGoalsData = aiNoteData?.itpGoalsData || {};
+  const sessionDetails = aiResponse.sessionDetails || {};
 
   // Format date helper
   const formatDate = (dateString: string) => {
@@ -158,7 +157,7 @@ export function NoteEditorCard({
             : "border-[#ccc9c0] bg-[#efefef]"
         }`}
       >
-        {/* Document Header */}
+        {/* Document Header - Using collectedSessionData */}
         <div className="bg-white p-6 rounded-lg border border-[#ccc9c0]">
           <div className="text-center border-b border-[#ccc9c0] pb-4 mb-4">
             <h2 className="text-[#303630] text-2xl mb-2">
@@ -174,37 +173,41 @@ export function NoteEditorCard({
             <div>
               <Label className="text-xs text-[#395159]">Person's Name</Label>
               <p className="text-[#303630]">
-                {clientDetails.name || sessionData?.clientName || "Client"}
+                {sessionData?.clientName || "Client"}
               </p>
             </div>
             <div>
               <Label className="text-xs text-[#395159]">Date of Birth</Label>
               <p className="text-[#303630]">
-                {sessionData?.clientDob || "N/A"}
+                {formatDate(sessionData?.clientDob)}
               </p>
             </div>
             <div>
               <Label className="text-xs text-[#395159]">Age</Label>
               <p className="text-[#303630]">
-                {clientDetails.age || "N/A"}
+                {sessionData?.clientAge || "N/A"}
               </p>
             </div>
             <div>
               <Label className="text-xs text-[#395159]">Diagnosis</Label>
               <p className="text-[#303630]">
-                {clientDetails.diagnosis || "N/A"}
+                {sessionData?.diagnosis || "N/A"}
               </p>
             </div>
             <div>
               <Label className="text-xs text-[#395159]">Provider Name</Label>
               <p className="text-[#303630]">
-                {currentUser?.name || "Provider Name"}
+                {sessionData?.providerName ||
+                  currentUser?.name ||
+                  "Provider Name"}
               </p>
             </div>
             <div>
               <Label className="text-xs text-[#395159]">Credential/Title</Label>
               <p className="text-[#303630]">
-                {currentUser?.credential || "Credential"}
+                {sessionData?.providerCredential ||
+                  currentUser?.credential ||
+                  "Credential"}
               </p>
             </div>
             <div>
@@ -212,7 +215,7 @@ export function NoteEditorCard({
                 Date Service Provided
               </Label>
               <p className="text-[#303630]">
-                {formatDate(sessionDetails.date || sessionData?.date)}
+                {formatDate(sessionData?.dateOfSession)}
               </p>
             </div>
             <div>
@@ -220,21 +223,29 @@ export function NoteEditorCard({
                 Documentation Date
               </Label>
               <p className="text-[#303630]">
-                {formatDate(new Date().toISOString())}
+                {formatDate(
+                  sessionData?.documentationDate || new Date().toISOString()
+                )}
               </p>
             </div>
             <div>
               <Label className="text-xs text-[#395159]">
-                Session Duration
+                Session Start Time
               </Label>
               <p className="text-[#303630]">
-                {sessionDetails.durationMinutes || itpGoalsData.duration || "N/A"} minutes
+                {moment(sessionData?.startTime).format("HH:mm") || "N/A"}
+              </p>
+            </div>
+            <div>
+              <Label className="text-xs text-[#395159]">Session End Time</Label>
+              <p className="text-[#303630]">
+                {moment(sessionData?.endTime).format("HH:mm") || "N/A"}
               </p>
             </div>
           </div>
         </div>
 
-        {/* Session Details Section */}
+        {/* Session Details Section - Using collectedSessionData */}
         <div className="bg-white p-6 rounded-lg border border-[#ccc9c0]">
           <h3 className="text-[#303630] mb-3 flex items-center gap-2">
             <FileText className="w-5 h-5 text-[#395159]" />
@@ -244,26 +255,37 @@ export function NoteEditorCard({
 
           <div className="space-y-3">
             <div>
+              <Label className="text-xs text-[#395159]">Total Duration</Label>
+              <p className="text-[#303630]">
+                {sessionData?.duration
+                  ? Math.round(sessionData.duration / 60)
+                  : "N/A"}{" "}
+                minutes
+              </p>
+            </div>
+            <div>
               <Label className="text-sm text-[#395159]">
                 Activities Engaged
               </Label>
               <div className="flex flex-wrap gap-2 mt-1">
-                {(itpGoalsData.activityEngaged || []).length > 0 ? (
-                  itpGoalsData.activityEngaged.map((activity: string, idx: number) => (
-                    <Badge
-                      key={idx}
-                      variant="outline"
-                      className="border-[#395159] text-[#395159]"
-                    >
-                      {activity}
-                    </Badge>
-                  ))
+                {(sessionData?.activityEngaged || []).length > 0 ? (
+                  sessionData.activityEngaged.map(
+                    (activity: string, idx: number) => (
+                      <Badge
+                        key={idx}
+                        variant="outline"
+                        className="border-[#395159] text-[#395159]"
+                      >
+                        {activity}
+                      </Badge>
+                    )
+                  )
                 ) : (
                   <Badge
                     variant="outline"
                     className="border-[#395159] text-[#395159]"
                   >
-                    Multiple Activities
+                    No activities recorded
                   </Badge>
                 )}
               </div>
@@ -274,48 +296,74 @@ export function NoteEditorCard({
                 Supports Observed
               </Label>
               <div className="flex flex-wrap gap-2 mt-1">
-                {(itpGoalsData.supportsObserved || []).length > 0 ? (
-                  itpGoalsData.supportsObserved.map((support: string, idx: number) => (
-                    <Badge
-                      key={idx}
-                      variant="outline"
-                      className="border-[#395159] text-[#395159]"
-                    >
-                      {support}
-                    </Badge>
-                  ))
+                {(sessionData?.supportsObserved || []).length > 0 ? (
+                  sessionData.supportsObserved.map(
+                    (support: string, idx: number) => (
+                      <Badge
+                        key={idx}
+                        variant="outline"
+                        className="border-[#395159] text-[#395159]"
+                      >
+                        {support}
+                      </Badge>
+                    )
+                  )
                 ) : (
                   <Badge
                     variant="outline"
                     className="border-[#395159] text-[#395159]"
                   >
-                    Multiple Supports
+                    No supports recorded
                   </Badge>
                 )}
               </div>
             </div>
 
-            {itpGoalsData?.providerObservation && (
+            <div>
+              <Label className="text-xs text-[#395159]">
+                Attendees Present
+              </Label>
+              <p className="text-[#303630]">
+                <Badge
+                  variant="outline"
+                  className="border-[#395159] text-[#395159]"
+                >
+                  {sessionData?.attendees || "Client Only"}
+                </Badge>
+              </p>
+            </div>
+            {sessionData?.variables && (
+              <div>
+                <Label className="text-xs text-[#395159]">
+                  Client Variables and Presentation
+                </Label>
+                <p className="text-[#303630]">{sessionData?.variables}</p>
+              </div>
+            )}
+          
+            {sessionData?.providerObservation && (
               <div>
                 <Label className="text-sm text-[#395159]">
                   Provider Observations
                 </Label>
                 <p className="text-[#303630] text-sm">
-                  {itpGoalsData?.providerObservation}
+                  {sessionData.providerObservation}
                 </p>
               </div>
             )}
           </div>
         </div>
 
-        {/* Clinical Note - Presentation and Engagement */}
+        {/* Clinical Note - Presentation and Engagement (AI Generated) */}
         <div className="bg-white p-6 rounded-lg border border-[#ccc9c0]">
           <h3 className="text-[#303630] mb-3 flex items-center gap-2">
             <CheckCircle2 className="w-5 h-5 text-[#395159]" />
-            Presentation and Engagement
+            Summary of Progress and Response to Treatment
           </h3>
           <Separator className="mb-4 bg-[#ccc9c0]" />
-
+             <Label className="text-sm text-[#395159]">
+                  Session Overview
+                </Label>
           <div className="space-y-4">
             {isEditing ? (
               <Textarea
@@ -327,18 +375,18 @@ export function NoteEditorCard({
               />
             ) : (
               <p className="text-[#303630] text-sm leading-relaxed">
-                {sessionOverview || clinicalNote.presentationAndEngagement || "No overview available."}
+                {sessionOverview ||
+                  clinicalNote.presentationAndEngagement ||
+                  "No overview available."}
               </p>
             )}
           </div>
         </div>
 
-        {/* Interactions and Affect */}
+        {/* Interactions and Affect (AI Generated) */}
         {clinicalNote.interactionsAndAffect && (
           <div className="bg-white p-6 rounded-lg border border-[#ccc9c0]">
-            <h3 className="text-[#303630] mb-3">
-              Interactions and Affect
-            </h3>
+            <h3 className="text-[#303630] mb-3">Interactions and Affect</h3>
             <Separator className="mb-4 bg-[#ccc9c0]" />
             <p className="text-[#303630] text-sm leading-relaxed">
               {clinicalNote.interactionsAndAffect}
@@ -346,11 +394,11 @@ export function NoteEditorCard({
           </div>
         )}
 
-        {/* FEDC Observations */}
+        {/* FEDC Observations (AI Generated) */}
         <div className="bg-white p-6 rounded-lg border border-[#ccc9c0]">
           <h3 className="text-[#303630] mb-3">FEDC Level Observations</h3>
           <Separator className="mb-4 bg-[#ccc9c0]" />
-          
+
           <div className="space-y-3">
             <div>
               <Label className="text-sm text-[#395159] mb-2 block">
@@ -374,147 +422,147 @@ export function NoteEditorCard({
           </div>
         </div>
 
-        {/* ITP Goal Progress */}
-        {(clinicalNote.goalProgress || []).map((goal: any, index: number) => {
-          const goalDataCollection = itpGoalsData.goals_dataCollection?.[index];
-          
-          return (
-            <div
-              key={index}
-              className="bg-white p-6 rounded-lg border border-[#ccc9c0]"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <h4 className="text-[#303630]">
-                  ITP Goal {goal.goalNumber || index + 1}
-                </h4>
-                <Badge
-                  className={`${
-                    parseInt(goal.performancePercentage) >= 80
-                      ? "bg-green-600"
-                      : parseInt(goal.performancePercentage) >= 60
-                      ? "bg-yellow-600"
-                      : "bg-orange-600"
-                  } text-white`}
-                >
-                  {goal?.performancePercentage}% Accuracy
-                </Badge>
-              </div>
-              <Separator className="mb-4 bg-[#ccc9c0]" />
+        {/* ITP Goal Progress - Using collectedSessionData goals */}
+        {(sessionData?.goalsDataCollection || []).map(
+          (goalDataCollection: any, index: number) => {
+            const aiGoal = clinicalNote.goalProgress?.[index] || {};
 
-              <div className="space-y-3">
-                <div>
-                  <Label className="text-sm text-[#395159]">
-                    Goal Description
-                  </Label>
-                  <p className="text-[#303630]">
-                    {goal?.goalName || goalDataCollection?.goalId?.category || "Goal"}
-                  </p>
+            // Calculate accuracy from collected data
+            const accuracy = goalDataCollection.accuracy || 0;
+            const total = goalDataCollection.total || 0;
+
+            return (
+              <div
+                key={index}
+                className="bg-white p-6 rounded-lg border border-[#ccc9c0]"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <h4 className="text-[#303630]">ITP Goal {index + 1}</h4>
+                  <Badge
+                    className={`${
+                      accuracy >= 80
+                        ? "bg-green-600"
+                        : accuracy >= 60
+                        ? "bg-yellow-600"
+                        : "bg-orange-600"
+                    } text-white`}
+                  >
+                    {accuracy}% Accuracy
+                  </Badge>
                 </div>
+                <Separator className="mb-4 bg-[#ccc9c0]" />
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm text-[#395159]">Performance</Label>
-                    <p className="text-[#303630]">
-                      {goal?.performancePercentage}% accuracy across {goal?.trials} trials
-                    </p>
-                  </div>
+                <div className="space-y-3">
                   <div>
                     <Label className="text-sm text-[#395159]">
-                      Total Opportunities
+                      Goal Description
                     </Label>
                     <p className="text-[#303630]">
-                      {goalDataCollection?.total || goal.trials}
+                      {aiGoal?.goalName ||
+                        goalDataCollection?.goalId?.category ||
+                        "Goal"}
                     </p>
                   </div>
-                </div>
 
-                {goal.supportLevels && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm text-[#395159]">
+                        Performance
+                      </Label>
+                      <p className="text-[#303630]">
+                        {accuracy}% accuracy across {total} trials
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-sm text-[#395159]">
+                        Total Opportunities
+                      </Label>
+                      <p className="text-[#303630]">{total}</p>
+                    </div>
+                  </div>
+
+                  {/* Support Level Breakdown from collected data */}
                   <div>
                     <Label className="text-sm text-[#395159] mb-2 block">
                       Support Level Breakdown
                     </Label>
                     <div className="grid grid-cols-3 gap-2">
                       <div className="p-2 bg-[#efefef] rounded border border-[#ccc9c0]">
-                        <Label className="text-xs text-[#395159]">Independent</Label>
+                        <Label className="text-xs text-[#395159]">
+                          Independent
+                        </Label>
                         <p className="text-[#303630] font-semibold">
-                          {goal.supportLevels.independent || 0}
+                          {goalDataCollection.supportLevel?.independent
+                            ?.count || 0}
+                        </p>
+                        <p className="text-xs text-[#395159]">
+                          Success:{" "}
+                          {goalDataCollection.supportLevel?.independent
+                            ?.success || 0}
                         </p>
                       </div>
                       <div className="p-2 bg-[#efefef] rounded border border-[#ccc9c0]">
-                        <Label className="text-xs text-[#395159]">Minimal</Label>
+                        <Label className="text-xs text-[#395159]">
+                          Minimal
+                        </Label>
                         <p className="text-[#303630] font-semibold">
-                          {goal.supportLevels.minimal || 0}
+                          {goalDataCollection.supportLevel?.minimal?.count || 0}
+                        </p>
+                        <p className="text-xs text-[#395159]">
+                          Success:{" "}
+                          {goalDataCollection.supportLevel?.minimal?.success ||
+                            0}
                         </p>
                       </div>
                       <div className="p-2 bg-[#efefef] rounded border border-[#ccc9c0]">
-                        <Label className="text-xs text-[#395159]">Moderate</Label>
+                        <Label className="text-xs text-[#395159]">
+                          Moderate
+                        </Label>
                         <p className="text-[#303630] font-semibold">
-                          {goal.supportLevels.moderate || 0}
+                          {goalDataCollection.supportLevel?.modrate?.count || 0}
+                        </p>
+                        <p className="text-xs text-[#395159]">
+                          Success:{" "}
+                          {goalDataCollection.supportLevel?.modrate?.success ||
+                            0}
                         </p>
                       </div>
                     </div>
                   </div>
-                )}
 
-                {goalDataCollection && (
-                  <div className="p-3 bg-gray-50 rounded border border-gray-200">
-                    <Label className="text-xs text-gray-500 mb-2 block">
-                      Detailed Support Level Data (Locked)
-                    </Label>
-                    <div className="grid grid-cols-3 gap-2 text-sm">
-                      <div>
-                        <p className="text-xs text-gray-500">Independent</p>
-                        <p className="text-gray-700">
-                          Success: {goalDataCollection.supportLevel.independent.success}/{goalDataCollection.supportLevel.independent.count}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Minimal</p>
-                        <p className="text-gray-700">
-                          Success: {goalDataCollection.supportLevel.minimal.success}/{goalDataCollection.supportLevel.minimal.count}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Moderate</p>
-                        <p className="text-gray-700">
-                          Success: {goalDataCollection.supportLevel.modrate.success}/{goalDataCollection.supportLevel.modrate.count}
-                        </p>
-                      </div>
+                  {aiGoal.masteryCriteria && (
+                    <div>
+                      <Label className="text-sm text-[#395159]">
+                        Mastery Criteria
+                      </Label>
+                      <p className="text-sm text-[#303630]">
+                        {aiGoal.masteryCriteria}
+                      </p>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {goal.masteryCriteria && (
-                  <div>
-                    <Label className="text-sm text-[#395159]">
-                      Mastery Criteria
-                    </Label>
-                    <p className="text-sm text-[#303630]">
-                      {goal.masteryCriteria}
-                    </p>
-                  </div>
-                )}
-
-                {goal.clinicalInterpretation && (
-                  <div>
-                    <Label className="text-sm text-[#395159]">
-                      Clinical Interpretation
-                    </Label>
-                    <p className="text-sm text-[#303630] leading-relaxed">
-                      {goal.clinicalInterpretation}
-                    </p>
-                  </div>
-                )}
+                  {aiGoal.clinicalInterpretation && (
+                    <div>
+                      <Label className="text-sm text-[#395159]">
+                        Clinical Interpretation
+                      </Label>
+                      <p className="text-sm text-[#303630] leading-relaxed">
+                        {aiGoal.clinicalInterpretation}
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          }
+        )}
+         
 
-        {/* Treatment Changes Section */}
-        <div className="bg-white p-6 rounded-lg border border-[#ccc9c0]">
+
+          <div className="bg-white p-6 rounded-lg border border-[#ccc9c0]">
           <h3 className="text-[#303630] mb-3 flex items-center gap-2">
             <Edit className="w-5 h-5 text-[#395159]" />
-            Treatment Changes / Diagnosis
+           Detailed Clinical Observations
           </h3>
           <Separator className="mb-4 bg-[#ccc9c0]" />
           {isEditing ? (
@@ -527,14 +575,41 @@ export function NoteEditorCard({
             />
           ) : (
             <p className="text-[#303630] text-sm whitespace-pre-wrap">
-              {treatmentChanges || 
-               clinicalNote.changesInTreatmentOrDiagnosis || 
-               "No changes to diagnosis at this time. Treatment plan remains appropriate."}
+              {treatmentChanges ||
+                clinicalNote.changesInTreatmentOrDiagnosis ||
+                "No changes to diagnosis at this time. Treatment plan remains appropriate."}
             </p>
           )}
         </div>
 
-        {/* Clinical Recommendations / Plan */}
+
+
+
+        {/* Treatment Changes Section (AI Generated) */}
+        <div className="bg-white p-6 rounded-lg border border-[#ccc9c0]">
+          <h3 className="text-[#303630] mb-3 flex items-center gap-2">
+            <Edit className="w-5 h-5 text-[#395159]" />
+           Changes in Treatment or Diagnosis
+          </h3>
+          <Separator className="mb-4 bg-[#ccc9c0]" />
+          {isEditing ? (
+            <Textarea
+              value={treatmentChanges}
+              onChange={(e) => setTreatmentChanges(e.target.value)}
+              rows={4}
+              className="bg-white"
+              placeholder="Document any changes to treatment or diagnosis..."
+            />
+          ) : (
+            <p className="text-[#303630] text-sm whitespace-pre-wrap">
+              {treatmentChanges ||
+                clinicalNote.changesInTreatmentOrDiagnosis ||
+                "No changes to diagnosis at this time. Treatment plan remains appropriate."}
+            </p>
+          )}
+        </div>
+
+        {/* Clinical Recommendations / Plan (AI Generated) */}
         <div className="bg-white p-6 rounded-lg border border-[#ccc9c0]">
           <h3 className="text-[#303630] mb-3 flex items-center gap-2">
             <CheckCircle2 className="w-5 h-5 text-[#395159]" />
@@ -551,7 +626,9 @@ export function NoteEditorCard({
             />
           ) : (
             <div className="text-sm text-[#303630] leading-relaxed whitespace-pre-wrap">
-              {clinicalRecommendations || clinicalNote.plan || "Plan will be documented here."}
+              {clinicalRecommendations ||
+                clinicalNote.plan ||
+                "Plan will be documented here."}
             </div>
           )}
         </div>
@@ -579,7 +656,9 @@ export function NoteEditorCard({
                     Provider Name
                   </Label>
                   <p className="text-[#303630]">
-                    {currentUser?.name || "Provider Name"}
+                    {sessionData?.providerName ||
+                      currentUser?.name ||
+                      "Provider Name"}
                   </p>
                 </div>
                 <div>
@@ -587,7 +666,9 @@ export function NoteEditorCard({
                     Credential/Title
                   </Label>
                   <p className="text-[#303630]">
-                    {currentUser?.credential || "Credential"}
+                    {sessionData?.providerCredential ||
+                      currentUser?.credential ||
+                      "Credential"}
                   </p>
                 </div>
               </div>
@@ -625,8 +706,11 @@ export function NoteEditorCard({
               <p className="text-sm text-green-800 flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4" />
                 Signed electronically by{" "}
-                {signature || currentUser?.name || "Provider"} on{" "}
-                {finalizedTimestamp}
+                {signature ||
+                  sessionData?.providerName ||
+                  currentUser?.name ||
+                  "Provider"}{" "}
+                on {finalizedTimestamp}
               </p>
               <p className="text-xs text-[#395159] mt-2">
                 If you need to edit and re-sign, please request QSP approval.

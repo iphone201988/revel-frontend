@@ -6,7 +6,6 @@ import { toast } from "react-toastify";
 import { CheckCircle2 } from "lucide-react";
 import { SessionHeader } from "../components/SessionHeader";
 import { GoalDataPanel } from "../components/GoalDataPanel";
-import { FedcPanel } from "../components/FedecPanel";
 import { SupportsPanel } from "../components/SupportPanel";
 import { ActivitiesPanel } from "../components/ActivitiesPanel";
 import { ObservationsCard } from "../components/ObsevationCard";
@@ -55,7 +54,6 @@ export function SessionDataCollectionScreen() {
   /* -------------------- STATE -------------------- */
 
   const [goalStates, setGoalStates] = useState<Record<string, GoalState>>({});
-  const [fedcObserved, setFedcObserved] = useState<string[]>([]);
   const [supportsObserved, setSupportsObserved] = useState<string[]>([]);
   const [activitiesEngaged, setActivitiesEngaged] = useState<string[]>([]);
   const [providerObservations, setProviderObservations] = useState("");
@@ -76,8 +74,8 @@ export function SessionDataCollectionScreen() {
 
   const [showSupportSelector, setShowSupportSelector] = useState<{
     goalId: string;
-    type: "success" | "miss";
-  } | null>(null);
+    type: "success" | "miss" | null;
+  }>();
 
   /* -------------------- INIT GOAL STATES -------------------- */
 
@@ -520,7 +518,7 @@ export function SessionDataCollectionScreen() {
 
   return (
     <div className="min-h-screen bg-[#efefef]">
-      <AppHeader onLogout={() => {}} />
+      <AppHeader />
 
       <div className="max-w-screen-2xl mx-auto px-6 py-8">
         <SessionHeader
@@ -561,7 +559,7 @@ export function SessionDataCollectionScreen() {
           />
 
           <div className="space-y-4">
-            <FedcPanel fedcObserved={fedcObserved} onToggle={ontoggle} />
+            {/* <FedcPanel fedcObserved={fedcObserved} onToggle={ontoggle} /> */}
 
             <Card className="p-6 bg-white">
               <h3 className="text-[#303630] mb-4">Supports Observed</h3>

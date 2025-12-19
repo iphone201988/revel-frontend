@@ -17,6 +17,8 @@ import { ProviderPermissionsScreen } from './pages/Admin/components/PermissionTa
 import { AuditLogScreen } from './pages/Admin/components/Audit/AuditLogs'
 import { SessionDataCollectionScreen } from './pages/Session/SessionDataCollection/SessionDataCollection'
 import { AINoteSummaryScreen } from './pages/AiNoteSummery/AiNoteSummery'
+import { HelpScreen } from './pages/Help'
+import { GoalReviewScreen } from './pages/Client/components/GoalReview'
 
 function App() {
   
@@ -39,6 +41,8 @@ function App() {
         <Route  path='/client' element={<ClientScreen/>}/>
         <Route  path='/session-data-collection' element={<SessionDataCollectionScreen/>}/>
         <Route  path='/ai-note-summery' element={<AINoteSummaryScreen/>}/>
+        <Route  path='/help' element={<HelpScreen/>}/>
+        <Route  path='/goal-review' element={<GoalReviewScreen/>}/>
       </Routes>
       </BrowserRouter>
     </>

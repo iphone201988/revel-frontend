@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useFormik } from "formik";
-import * as Yup from "yup";
+
 import { ArrowLeft, UserPlus, X, Search, ChevronDown } from "lucide-react";
 import { Button } from "../../../components/Button";
 import { Card } from "../../../components/Card";
@@ -46,11 +46,20 @@ import {
 import { useNavigate } from "react-router-dom";
 import PhoneInput from "react-phone-input-2";
 import { clientSchema } from "../../../Schema";
+import EditClientDialog from "./EditClient/EditClient";
 
 export function ClientManagement() {
+  const [providerSearchOpen, setProviderSearchOpen] = useState(false);
+  const [addClientDialogOpen, setAddClientDialogOpen] = useState(false);
+
+  const [editClientOpen, setEditClientOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<any>(null);
+
+
   const { data: clients }: any = useGetAllClientsQuery();
   const { data: providers }: any = useGetProvidersQuery();
   const [addClient, { data, isSuccess }] = useAddClientMutation();
+
 
   useEffect(() => {
     if (isSuccess) {
@@ -58,8 +67,6 @@ export function ClientManagement() {
     }
   }, [data]);
   const navigate = useNavigate();
-  const [providerSearchOpen, setProviderSearchOpen] = useState(false);
-  const [addClientDialogOpen, setAddClientDialogOpen] = useState(false);
 
   const formik = useFormik({
     initialValues: {
@@ -186,11 +193,12 @@ export function ClientManagement() {
                     name="diagnosis"
                     value={formik.values.diagnosis}
                     onChange={formik.handleChange}
-
                   />
-                  
+
                   {errorText("diagnosis") && (
-                    <p className="text-sm text-red-600">{errorText("diagnosis")}</p>
+                    <p className="text-sm text-red-600">
+                      {errorText("diagnosis")}
+                    </p>
                   )}
                 </div>
 
@@ -202,9 +210,11 @@ export function ClientManagement() {
                     value={formik.values.parentName}
                     onChange={formik.handleChange}
                   />
-                  
+
                   {errorText("parentName") && (
-                    <p className="text-sm text-red-600">{errorText("parentName")}</p>
+                    <p className="text-sm text-red-600">
+                      {errorText("parentName")}
+                    </p>
                   )}
                 </div>
 
@@ -403,10 +413,12 @@ export function ClientManagement() {
                     type="date"
                     value={formik.values.reviewDate}
                     onChange={formik.handleChange}
-                    
                   />
-                  | {errorText("reviewDate") && (
-                    <p className="text-sm text-red-600">{errorText("reviewDate")}</p>
+                  |{" "}
+                  {errorText("reviewDate") && (
+                    <p className="text-sm text-red-600">
+                      {errorText("reviewDate")}
+                    </p>
                   )}
                   <p className="text-sm text-[#395159]">
                     ITP review date - alerts will appear at 60 and 30 days
@@ -451,9 +463,10 @@ export function ClientManagement() {
                   size="sm"
                   variant="outline"
                   className="border-[#395159] text-[#395159]"
-                  onClick={() =>
-                    toast.success("Edit client feature coming soon")
-                  }
+                  onClick={() => {
+                    setSelectedClient(client);
+                    setEditClientOpen(true);
+                  }}
                 >
                   Edit
                 </Button>
@@ -462,6 +475,13 @@ export function ClientManagement() {
           ))}
         </div>
       </Card>
+      {selectedClient && (
+  <EditClientDialog
+    open={editClientOpen}
+    onOpenChange={setEditClientOpen}
+    client={selectedClient}
+  />
+)}
     </>
   );
 }

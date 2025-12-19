@@ -1,5 +1,4 @@
 // components/AuditStatsSection.tsx
-import React from 'react';
 import { Activity, TrendingUp, User } from 'lucide-react';
 import { Card } from '../../../../../components/Card';
 import { Badge } from '../../../../../components/Badge';

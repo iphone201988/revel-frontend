@@ -18,7 +18,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "../../../components/Collapsible";
-import type { GoalState, Goal, GoalDataPanelProps } from "./types";
+import type { GoalDataPanelProps } from "./types";
 import { RemovedGoalsPanel } from "./RemovedGoalPanel";
 import { SupportLevel } from "../../../utils/enums/enum";
 
@@ -180,7 +180,7 @@ export function GoalDataPanel({
                           Trial-by-Trial Tracking
                         </Label>
 
-                        {showSupportSelector?.goalId === goal.id && (
+                        {showSupportSelector?.goalId === goal?.id && (
                           <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
                             <p className="text-sm text-blue-900 mb-3">
                               Select support level for this{" "}
@@ -194,8 +194,8 @@ export function GoalDataPanel({
                                 size="sm"
                                 onClick={() =>
                                   onAddTrial(
-                                    goal.id,
-                                    showSupportSelector?.type,
+                                    goal?.id,
+                                    showSupportSelector.type,
                                     SupportLevel.Independent
                                   )
                                 }
@@ -208,7 +208,7 @@ export function GoalDataPanel({
                                 onClick={() =>
                                   onAddTrial(
                                     goal.id,
-                                    showSupportSelector?.type,
+                                    showSupportSelector.type,
                                     SupportLevel.Minimal
                                   )
                                 }

@@ -11,66 +11,9 @@ import { Textarea } from '../../../components/Textarea';
 import { ScrollArea } from '../../../components/ScrollArea';
 import { Download, Search, X, CheckCircle2, AlertTriangle, Eye, Edit, Clock, AlertCircle, FileText, Lock } from 'lucide-react';
 import { toast } from 'react-toastify';
+import type { HistorySectionProps, SessionData } from '../../../Types/types';
 
 // Updated interface to match your API response
-interface GoalDataCollection {
-  supportLevel: {
-    independent: { count: number; success: number; miss?: number };
-    minimal: { count: number; success: number; miss: number };
-    modrate: { count: number; success: number; miss: number };
-  };
-  goalId: string;
-  accuracy: number;
-  total: number;
-  counter: number;
-  time: string;
-  _id: string;
-}
-
-interface SessionData {
-  _id: string;
-  sessionId: {
-    _id: string;
-    client: string;
-    provider: string;
-    sessionType: string;
-    dateOfSession: string;
-    startTime: string;
-    endTime: string;
-    organizationId: string;
-    status: string;
-  };
-  goals_dataCollection: GoalDataCollection[];
-  clientId: {
-    _id: string;
-    name: string;
-    dob: string;
-    diagnosis: string;
-    parentName: string;
-    email: string;
-    itpGoals: Array<{
-      goal: string;
-      targetDate: string;
-      baselinePercentage: number;
-      _id: string;
-    }>;
-  };
-  organizationId: string;
-  activityEngaged: string[];
-  supportsObserved: string[];
-  duration: number;
-  providerObservation: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface HistorySectionProps {
-  sessions: SessionData[] | any; // Allow any for now to handle API response
-  canEditSignedNotes: boolean;
-  currentUser: any;
-  canViewAllSessions?: boolean;
-  canviewAllSessions?: boolean; // Support both casings for backward compatibility
-}
 
 export function HistorySection({
   sessions: rawSessions = [],
@@ -403,7 +346,7 @@ export function HistorySection({
                   <Download className="w-4 h-4 mr-1" />
                   Download PDF
                 </Button>
-                {session.sessionId.provider === currentUser?._id && canEditSignedNotes && (
+                {/* {session.sessionId.provider === currentUser?._id && canEditSignedNotes && (
                   <Button
                     size="sm"
                     variant="outline"
@@ -413,7 +356,7 @@ export function HistorySection({
                     <Edit className="w-4 h-4 mr-1" />
                     Edit Note
                   </Button>
-                )}
+                )} */}
               </div>
             </div>
           ))

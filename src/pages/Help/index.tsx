@@ -15,13 +15,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '..
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 
-interface HelpScreenProps {
-  currentUser: any;
-  onNavigate: (screen: Screen) => void;
-  onLogout: () => void;
-}
 
-export function HelpScreen({ currentUser, onNavigate, onLogout }: HelpScreenProps) {
+export function HelpScreen({ currentUser }:any) {
 
     const navigate = useNavigate()
   const [ticketSubject, setTicketSubject] = useState('');
@@ -46,7 +41,7 @@ export function HelpScreen({ currentUser, onNavigate, onLogout }: HelpScreenProp
 
   return (
     <div className="min-h-screen bg-[#efefef]">
-      <AppHeader title="Help & Support" onLogout={onLogout} onNavigate={onNavigate} />
+      <AppHeader  />
       
       <div className="max-w-screen-2xl mx-auto px-6 py-8">
         <Button

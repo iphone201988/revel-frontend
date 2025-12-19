@@ -12,35 +12,36 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { handleError } from "../../../utils/helper";
 
 const VerifyOtp = () => {
-    const location =  useLocation()
-    const email = location?.state?.Email
+  const location = useLocation();
+  const email = location?.state?.Email;
   const navigate = useNavigate();
-  const [otp, setOtp] = useState('');
+  const [otp, setOtp] = useState("");
 
   const [verifyOtp, { data, isLoading, isSuccess }] = useVerifyOtpMutation();
   const [sendOtp, { data: otpData }] = useSendOtpMutation();
 
   useEffect(() => {
     if (isSuccess) {
-      console.log("profile data", data)
+      console.log("profile data", data);
       toast.success("Account Verified Successfully");
-      localStorage.setItem("token", data?.data?.token)
+      localStorage.setItem("token", data?.data?.token);
       navigate("/");
     }
   }, [data]);
   const handleResend = () => {
-    sendOtp({email}).unwrap().catch((error)=>handleError(error))
+    sendOtp({ email })
+      .unwrap()
+      .catch((error) => handleError(error));
   };
 
-  useEffect(()=>{
-  if (otpData?.success) {
-    
+  useEffect(() => {
+    if (otpData?.success) {
       toast.success("OTP is send to email Successfully");
-      localStorage.setItem("token", data?.data?.token)
-  }
-  },[otpData])
+      localStorage.setItem("token", data?.data?.token);
+    }
+  }, [otpData]);
   const handleVerify = () => {
-    verifyOtp({otp:Number(otp), email:email})
+    verifyOtp({ otp: Number(otp), email: email })
       .unwrap()
       .catch((error) => handleError(error));
   };
@@ -69,18 +70,7 @@ const VerifyOtp = () => {
           </div>
 
           <div className="space-y-6">
-            {/* <div className="flex flex-col items-center gap-4"> */}
-            {/* <InputOTP maxLength={6} value={code} onChange={setCode}>
-              <InputOTPGroup>
-                <InputOTPSlot index={0} className="w-14 h-14" />
-                <InputOTPSlot index={1} className="w-14 h-14" />
-                <InputOTPSlot index={2} className="w-14 h-14" />
-                <InputOTPSlot index={3} className="w-14 h-14" />
-                <InputOTPSlot index={4} className="w-14 h-14" />
-                <InputOTPSlot index={5} className="w-14 h-14" />
-              </InputOTPGroup>
-            </InputOTP> */}
-            <OTPInput
+            {/* <OTPInput
               value={otp}
               onChange={setOtp}
               numInputs={6}
@@ -89,7 +79,38 @@ const VerifyOtp = () => {
               inputStyle="!w-20 h-14"
               renderSeparator={<span></span>}
               renderInput={(props) => <input {...props} />}
-            />
+            /> */}  
+            <OTPInput
+  value={otp}
+  onChange={setOtp}
+  numInputs={6}
+  // use text + inputMode instead of inputType="number"
+  inputType="text"
+  containerStyle="flex justify-between gap-2"
+  inputStyle={{
+    width: "3rem",
+    height: "3rem",
+    borderRadius: "0.5rem",
+    border: "2px solid #395159",
+    textAlign: "center",
+    fontSize: "1.25rem",
+    fontWeight: 600,
+    color: "#303630",
+    backgroundColor: "#ffffff",
+    outline: "none",
+  }}
+  renderSeparator={<span className="w-2" />}
+  renderInput={(props) => (
+    <input
+      {...props}
+      inputMode="numeric"       // mobile numeric keyboard
+      pattern="[0-9]*"          // restrict to digits
+      maxLength={1}
+    />
+  )}
+/>
+
+
             {/* </div> */}
 
             <Button

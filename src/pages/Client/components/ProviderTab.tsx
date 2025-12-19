@@ -22,7 +22,7 @@ export function ProvidersSection({ providers, initialAssigned , clientId}: Provi
   // console.log(initialAssigned," already assigned");
   
    const [assignedProviders, setAssignedProviders] = useState<string[]>(
-    initialAssigned.map((p: any) => (typeof p === 'string' ? p : p._id))
+    initialAssigned?.map((p: any) => (typeof p === 'string' ? p : p._id))
   );
   const [providerSearchOpen, setProviderSearchOpen] = useState(false);
 
@@ -105,7 +105,7 @@ export function ProvidersSection({ providers, initialAssigned , clientId}: Provi
                   <CommandEmpty>No provider found.</CommandEmpty>
                   <CommandGroup>
                     {providers
-                      .filter((p: any) => !assignedProviders.includes(p._id))
+                      .filter((p: any) => !assignedProviders?.includes(p._id))
                       .map((provider: any) => (
                         <CommandItem
                           key={provider._id}
@@ -128,8 +128,8 @@ export function ProvidersSection({ providers, initialAssigned , clientId}: Provi
         <Separator />
 
         <div className="space-y-3">
-          <Label>Assigned Providers ({assignedProviders.length})</Label>
-          {assignedProviders.length === 0 ? (
+          <Label>Assigned Providers ({assignedProviders?.length})</Label>
+          {assignedProviders?.length === 0 ? (
             <div className="p-8 text-center bg-[#efefef] rounded-lg border border-[#ccc9c0]">
               <Users className="w-12 h-12 mx-auto mb-3 text-[#395159] opacity-50" />
               <p className="text-[#395159]">No providers assigned to this client yet</p>
@@ -137,7 +137,7 @@ export function ProvidersSection({ providers, initialAssigned , clientId}: Provi
             </div>
           ) : (
             <div className="space-y-3">
-              {assignedProviders.map(providerId => {
+              {assignedProviders?.map(providerId => {
                 const provider = providers.find((p: any) => p._id === providerId);
                 return provider ? (
                   <div
@@ -145,8 +145,8 @@ export function ProvidersSection({ providers, initialAssigned , clientId}: Provi
                     className="p-4 bg-[#efefef] rounded-lg border border-[#ccc9c0] flex items-center justify-between"
                   >
                     <div>
-                      <p className="text-[#303630]">{provider.name}</p>
-                      <p className="text-sm text-[#395159]">{provider.credential}</p>
+                      <p className="text-[#303630]">{provider?.name}</p>
+                      <p className="text-sm text-[#395159]">{provider?.credential}</p>
                     </div>
                     <Button
                       variant="outline"

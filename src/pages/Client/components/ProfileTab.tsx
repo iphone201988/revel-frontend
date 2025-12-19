@@ -12,7 +12,7 @@ import {
 import { Input } from "../../../components/Input";
 
 import { Shield, UserCheck, Calendar } from "lucide-react";
-import type { ClientProfile, ProfileSectionProps } from "./types";
+import type {  ProfileSectionProps } from "./types";
 import { toast } from "react-toastify";
 import moment from "moment";
 import { useUpdateClientMutation } from "../../../redux/api/provider";
@@ -29,7 +29,7 @@ export function ProfileSection({
   initialPlanReviewDate,
   clientId
 }: ProfileSectionProps) {
-  const [clientProfile, setClientProfile] = useState<ClientProfile>(
+  const [clientProfile, setClientProfile] = useState<any>(
     initialProfile || {}
   );
   const [qsp, setQsp] = useState(initialQsp);
@@ -177,12 +177,12 @@ export function ProfileSection({
         </div>
 
         <div className="space-y-6">
-          {ClientProfileFields.map((field) => (
+          {ClientProfileFields.map((field:any) => (
             <ClientProfileTextarea
               key={field.id}
               field={field}
               value={clientProfile?.[field.key] || ""}
-              onChange={(val) =>
+              onChange={(val:any) =>
                 setClientProfile({ ...clientProfile, [field.key]: val })
               }
             />

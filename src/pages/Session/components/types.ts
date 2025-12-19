@@ -69,7 +69,7 @@ export interface GoalDataPanelProps {
   removedGoals: Goal[];
   goalStates: { [key: string]: GoalState };
   collapsedGoals: { [key: string]: boolean };
-  showSupportSelector: { goalId: string; type: 'success' | 'miss' } | null;
+  showSupportSelector: { goalId: string; type: 'success' | 'miss' } ;
   onCollapseAll: () => void;
   onExpandAll: () => void;
   onToggleCollapse: (goalId: string) => void;

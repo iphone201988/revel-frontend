@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useFormik } from "formik";
-import * as Yup from "yup";
 import { Target, Plus, Edit, Trash2, ArrowLeft } from "lucide-react";
 import { Button } from "../../../components/Button";
 import { Card } from "../../../components/Card";
@@ -26,6 +25,7 @@ import { Input } from "../../../components/Input";
 import { toast } from "react-toastify";
 import {
   useAddGoalMutation,
+  useDeleteGoalMutation,
   useGetGoalsQuery,
 } from "../../../redux/api/provider";
 import { handleError } from "../../../utils/helper";
@@ -34,8 +34,12 @@ import { useNavigate } from "react-router-dom";
 import { GoalBankCategory, SupportLevelOptions } from "../../../Constant";
 import { SelectBox } from "../../../components/SelectBox";
 import { goalSchema } from "../../../Schema";
+import EditGoalPopup from "./EditGoal/EditGoal";
 
 export function GoalBankManagement() {
+  const [editingGoal, setEditingGoal] = useState<any | null>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+
   const navigate = useNavigate();
   const [addGoal, { data, isSuccess }] = useAddGoalMutation();
 
@@ -72,16 +76,19 @@ export function GoalBankManagement() {
         .unwrap()
         .catch((error) => handleError(error));
 
-      console.log("FINAL PAYLOAD SENT TO API:", payload);
-
-      // === Call your API here ===
-      // await addGoal(payload);
-
-      toast.success("Goal added to bank successfully");
       helpers.resetForm();
       setIsAddingGoal(false);
     },
   });
+
+  const [deleteGoal] = useDeleteGoalMutation();
+
+  const handleDeleteGoal = async (goalId: any) => {
+    await deleteGoal(goalId)
+      .unwrap()
+      .catch((error) => handleError(error));
+    toast.success("Goal deleted Successfully");
+  };
 
   useEffect(() => {
     if (isSuccess) {
@@ -332,15 +339,19 @@ export function GoalBankManagement() {
                         size="sm"
                         variant="outline"
                         className="border-[#395159] text-[#395159]"
-                        onClick={() => toast.success("Edit goal coming soon")}
+                        onClick={() => {
+                          setEditingGoal(goal);
+                          setIsEditOpen(true);
+                        }}
                       >
                         <Edit className="w-4 h-4" />
                       </Button>
+
                       <Button
                         size="sm"
                         variant="outline"
                         className="border-red-500 text-red-500 hover:bg-red-50"
-                        onClick={() => toast.success("Delete goal coming soon")}
+                        onClick={() => handleDeleteGoal(goal?._id)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -352,6 +363,14 @@ export function GoalBankManagement() {
           ))}
         </div>
       </Card>
+      {editingGoal && (
+  <EditGoalPopup
+    open={isEditOpen}
+    onClose={() => setIsEditOpen(false)}
+    goal={editingGoal}
+  />
+)}
+
     </>
   );
 }

@@ -41,7 +41,7 @@ export const AuditLogTableHeaders: string[] = [
   "Resource",
   "Status",
   "IP Address",
-  "Details",
+ 
 ];
 
 export const SupportLevelOptions = [

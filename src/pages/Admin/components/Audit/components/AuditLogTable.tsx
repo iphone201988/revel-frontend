@@ -61,7 +61,7 @@ export function AuditLogTable({
   getResourceIcon,
   onSelectLog = () => {},
 }: Props) {
-  console.log(logs, "??????????????????????????");
+
 
   return (
     <Card className="p-6 bg-white">
@@ -112,7 +112,12 @@ export function AuditLogTable({
                       </div>
                     </TableCell>
 
-                    <TableCell>{log.action}</TableCell>
+                    <TableCell> <div className="flex items-center gap-2 text-[#395159]">
+                        {getActionBadge
+                          ? getActionBadge(log.action || "")
+                          : null}
+                      
+                      </div></TableCell>
 
                     <TableCell>
                       <div className="flex items-center gap-2 text-[#395159]">
@@ -127,8 +132,8 @@ export function AuditLogTable({
                       <Badge
                         className={
                           log.status === "success"
-                            ? "bg-green-500 text-white"
-                            : "bg-red-500 text-white"
+                            ? "bg-green-500 text-white capitalize"
+                            : "bg-red-500 text-white capitalize"
                         }
                       >
                         {log.status}
@@ -138,7 +143,7 @@ export function AuditLogTable({
                     <TableCell className="text-[#395159]">
                       {log.ipAddress || "N/A"}
                     </TableCell>
-
+{/* 
                     <TableCell>
                       {log.details ? (
                         <Dialog>
@@ -184,7 +189,7 @@ export function AuditLogTable({
                       ) : (
                         "—"
                       )}
-                    </TableCell>
+                    </TableCell> */}
                   </TableRow>
                 ))}
             </TableBody>

@@ -10,6 +10,7 @@ import {
   Calendar,
   Activity,
   TrendingUp,
+  Goal,
 } from "lucide-react";
 import { Button } from "../../../../components/Button";
 import { Badge } from "../../../../components/Badge";
@@ -90,9 +91,9 @@ useEffect(() => {
 
   const getActionBadge = (action: string) => {
     const actionMap: Record<string, { label: string; color: string }> = {
-      login: { label: "Login", color: "bg-blue-500" },
-      logout: { label: "Logout", color: "bg-gray-500" },
-      view_client: { label: "View Client", color: "bg-green-500" },
+      login: { label: "Provider Login", color: "bg-blue-500" },
+      logout: { label: "Provider Logout", color: "bg-gray-500" },
+      view_client: { label: "View Clients", color: "bg-green-500" },
       create_client: { label: "Create Client", color: "bg-emerald-500" },
       update_client: { label: "Update Client", color: "bg-yellow-500" },
       delete_client: { label: "Delete Client", color: "bg-red-500" },
@@ -103,7 +104,7 @@ useEffect(() => {
       export_pdf: { label: "Export PDF", color: "bg-orange-500" },
       create_provider: { label: "Create Provider", color: "bg-emerald-500" },
       update_provider: { label: "Update Provider", color: "bg-yellow-500" },
-      view_audit_logs: { label: "View Audit", color: "bg-indigo-500" },
+      view_audit_logs: { label: "View Statistics", color: "bg-indigo-500" },
     };
 
     const config = actionMap[action] || { label: action, color: "bg-gray-500" };
@@ -111,15 +112,26 @@ useEffect(() => {
       <Badge className={`${config.color} text-white`}>{config.label}</Badge>
     );
   };
+  
+
+
+// GOAL
+
+
+
+
+
+
 
   const getResourceIcon = (resource: string) => {
     const iconMap: Record<string, React.ReactNode> = {
-      authentication: <Shield className="w-4 h-4" />,
-      client: <User className="w-4 h-4" />,
-      session: <Calendar className="w-4 h-4" />,
+      Auth: <Shield className="w-4 h-4" />,
+      Client: <User className="w-4 h-4" />,
+      Session: <Calendar className="w-4 h-4" />,
       document: <FileText className="w-4 h-4" />,
-      provider: <User className="w-4 h-4" />,
-      audit_logs: <Activity className="w-4 h-4" />,
+      Provider: <User className="w-4 h-4" />,
+      Goal: <Goal className="w-4 h-4" />,
+      Audit_Logs: <Activity className="w-4 h-4" />,
     };
 
     return iconMap[resource] || <FileText className="w-4 h-4" />;
@@ -127,7 +139,7 @@ useEffect(() => {
 
   return (
     <div className="min-h-screen bg-[#efefef]">
-      <AppHeader onLogout={() => {}} />
+      <AppHeader  />
 
       <div className="max-w-screen-2xl mx-auto px-6 py-8">
         <div className="flex items-center justify-between mb-6">
@@ -208,6 +220,8 @@ useEffect(() => {
               page={auditsLogs?.data?.page}
               totalPages={auditsLogs?.data?.totalPages}
               totalRecords={auditsLogs?.data?.totalRecords}
+               getResourceIcon={getResourceIcon}
+                getActionBadge={getActionBadge}
               onPageChange={setSelectedPage}
             />
             {/* <AuditLogTable

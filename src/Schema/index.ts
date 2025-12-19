@@ -34,3 +34,16 @@ export const addProviderSchema =   Yup.object({
       email: Yup.string().email().required("Email is required"),
       phone: Yup.string().nullable()
     })
+
+    // schemas/editClientSchema.ts
+
+
+export const editClientSchema = Yup.object({
+  name: Yup.string().required("Client name is required"),
+  dob: Yup.string().required("Date of birth is required"),
+  diagnosis: Yup.string().required("Diagnosis is required"),
+  parentName: Yup.string().required("Parent/Guardian name is required"),
+  email: Yup.string().email("Invalid email").required("Email is required"),
+  phone: Yup.string().required("Phone number is required"),
+  reviewDate: Yup.string().required("Review date is required"),
+});

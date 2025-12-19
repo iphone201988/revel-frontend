@@ -58,7 +58,7 @@ import type { ClientProfileFields } from "../../Constant";
 
 type ClientProfileTextareaProps = {
   field: typeof ClientProfileFields[number];
-  value: string;
+  value: any;
   onChange: (val: string) => void;
 };
 

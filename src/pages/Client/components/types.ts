@@ -1,15 +1,6 @@
-export interface  ClientProfile {
-  interests: string;
-  strengths: string;
-  challenges: string;
-  familyContext: string;
-  preferredActivities: string;
-  sensoryProcessing: string;
-  communication: string;
-  safetyConsiderations?: string;
-}
 
 export interface Goal {
+  goal:any
    _id: number;
   category: string;
   discription: string;
@@ -33,7 +24,7 @@ export interface ClientData {
   qsp: string;
   clinicalSupervisor: string;
   planReviewDate: string;
-  profile: ClientProfile;
+  profile: any;
   goals: Goal[];
 }
 
@@ -78,7 +69,7 @@ export interface SessionEntry {
 
 export interface ProfileSectionProps {
   providers: Provider[];
-  initialProfile: ClientProfile  ;
+  initialProfile: any  ;
   initialQsp: string;
   initialClinicalSupervisor: any;
   initialPlanReviewDate: any;
