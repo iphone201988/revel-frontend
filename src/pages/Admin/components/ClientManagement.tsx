@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useFormik } from "formik";
 
-import { ArrowLeft, UserPlus, X, Search, ChevronDown } from "lucide-react";
+import { UserPlus, X, Search, ChevronDown } from "lucide-react";
 import { Button } from "../../../components/Button";
 import { Card } from "../../../components/Card";
 import { Input } from "../../../components/Input";
@@ -36,17 +36,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../../../components/Dailog";
-import { toast } from "react-toastify";
 
 import {
   useAddClientMutation,
   useGetAllClientsQuery,
   useGetProvidersQuery,
 } from "../../../redux/api/provider";
-import { useNavigate } from "react-router-dom";
 import PhoneInput from "react-phone-input-2";
 import { clientSchema } from "../../../Schema";
 import EditClientDialog from "./EditClient/EditClient";
+import { handleError } from "../../../utils/helper";
+import { showSuccess } from "../../../components/CustomToast";
 
 export function ClientManagement() {
   const [providerSearchOpen, setProviderSearchOpen] = useState(false);
@@ -55,18 +55,15 @@ export function ClientManagement() {
   const [editClientOpen, setEditClientOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<any>(null);
 
-
   const { data: clients }: any = useGetAllClientsQuery();
   const { data: providers }: any = useGetProvidersQuery();
   const [addClient, { data, isSuccess }] = useAddClientMutation();
 
-
   useEffect(() => {
     if (isSuccess) {
-      toast.success("Client added successfully.");
+      showSuccess("Client added successfully.");
     }
   }, [data]);
-  const navigate = useNavigate();
 
   const formik = useFormik({
     initialValues: {
@@ -86,7 +83,9 @@ export function ClientManagement() {
     validateOnBlur: false,
     validateOnChange: false,
     onSubmit: (values, helpers) => {
-      addClient(values);
+      addClient(values)
+        .unwrap()
+        .catch((error) => handleError(error));
       helpers.resetForm();
       setAddClientDialogOpen(false);
     },
@@ -114,17 +113,6 @@ export function ClientManagement() {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-6">
-        <Button
-          onClick={() => navigate("/")}
-          variant="outline"
-          className="border-[#395159] text-[#395159]"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Dashboard
-        </Button>
-      </div>
-
       <h2 className="text-[#303630] mb-6">Administration</h2>
 
       <Card className="p-6 bg-white mb-6">
@@ -191,6 +179,7 @@ export function ClientManagement() {
                   <Input
                     id="diagnosis"
                     name="diagnosis"
+                    placeholder="Primary diagonis"
                     value={formik.values.diagnosis}
                     onChange={formik.handleChange}
                   />
@@ -207,6 +196,7 @@ export function ClientManagement() {
                   <Input
                     id="parentName"
                     name="parentName"
+                    placeholder="Enter parent/guardian name"
                     value={formik.values.parentName}
                     onChange={formik.handleChange}
                   />
@@ -224,6 +214,7 @@ export function ClientManagement() {
                     id="email"
                     name="email"
                     type="email"
+                    placeholder="parent@example.com"
                     value={formik.values.email}
                     onChange={formik.handleChange}
                   />
@@ -232,31 +223,32 @@ export function ClientManagement() {
                     <p className="text-sm text-red-600">{errorText("email")}</p>
                   )}
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="phone">Contact Phone</Label>
+
                   <PhoneInput
                     country="in"
                     enableSearch
-                    value={`${formik.values.countryCode}${formik.values.phone}`}
+                    value={formik.values.phone} //  FULL NUMBER ONLY
                     onChange={(value, data) => {
-                      if (data && "dialCode" in data) {
-                        // <-- type guard
-                        const dialCode = `+${data.dialCode}`;
-
-                        // Remove country code from number
-                        const localNumber = value.replace(dialCode, "");
-
-                        formik.setFieldValue("countryCode", dialCode);
-                        formik.setFieldValue("phone", localNumber);
+                      if (
+                        data &&
+                        typeof data === "object" &&
+                        "dialCode" in data
+                      ) {
+                        formik.setFieldValue(
+                          "countryCode",
+                          `+${data.dialCode}`
+                        );
+                        formik.setFieldValue("phone", value); //  store full value
                       }
                     }}
                     onBlur={() => {
                       formik.setFieldTouched("phone", true);
-                      formik.setFieldTouched("countryCode", true);
                     }}
                     placeholder="(555) 123-4567"
                   />
+
                   {errorText("phone") && (
                     <p className="text-sm text-red-600">{errorText("phone")}</p>
                   )}
@@ -476,12 +468,12 @@ export function ClientManagement() {
         </div>
       </Card>
       {selectedClient && (
-  <EditClientDialog
-    open={editClientOpen}
-    onOpenChange={setEditClientOpen}
-    client={selectedClient}
-  />
-)}
+        <EditClientDialog
+          open={editClientOpen}
+          onOpenChange={setEditClientOpen}
+          client={selectedClient}
+        />
+      )}
     </>
   );
 }

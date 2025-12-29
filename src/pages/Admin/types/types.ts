@@ -1,11 +1,4 @@
-export interface Provider {
-  id: string;
-  name: string;
-  credential: string;
-  level?: string;
-  role?: string;
-  clients?: string;
-}
+
 
 export interface Goal {
   id: number;

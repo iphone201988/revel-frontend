@@ -1,13 +1,14 @@
+import { PlusCircle } from "lucide-react";
+import { Card } from "../../../components/Card";
+import { Button } from "../../../components/Button";
+import { Badge } from "../../../components/Badge";
 
-
-import { PlusCircle } from 'lucide-react';
-import { Card } from '../../../components/Card';
-import { Button } from '../../../components/Button';
-import { Badge } from '../../../components/Badge';
-
-
-
-export function RemovedGoalsPanel({ removedGoals, isOpen, onToggle, onReAdd }:any) {
+export function RemovedGoalsPanel({
+  removedGoals,
+  isOpen,
+  onToggle,
+  onReAdd,
+}: any) {
   if (removedGoals.length === 0) return null;
 
   return (
@@ -20,16 +21,15 @@ export function RemovedGoalsPanel({ removedGoals, isOpen, onToggle, onReAdd }:an
         <div className="flex items-center gap-2">
           <PlusCircle className="w-4 h-4 text-amber-700" />
           <span className="text-amber-900">
-            {removedGoals.length} Removed Goal{removedGoals.length > 1 ? 's' : ''} - Click to Re-add
+            {removedGoals.length} Removed Goal
+            {removedGoals.length > 1 ? "s" : ""} - Click to Re-add
           </span>
         </div>
-        <span className="text-amber-700 text-sm">
-          {isOpen ? '▼' : '▶'}
-        </span>
+        <span className="text-amber-700 text-sm">{isOpen ? "▼" : "▶"}</span>
       </Button>
       {isOpen && (
         <div className="pt-4 space-y-2">
-          {removedGoals.map((goal:any) => (
+          {removedGoals.map((goal: any) => (
             <div
               key={goal?.id}
               className="flex items-center justify-between p-3 bg-white rounded border border-amber-200"
@@ -55,4 +55,3 @@ export function RemovedGoalsPanel({ removedGoals, isOpen, onToggle, onReAdd }:an
     </Card>
   );
 }
-

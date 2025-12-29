@@ -40,7 +40,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../../../../../components/AlertDailog";
-import { toast } from "react-toastify";
+
 import { useLocation, useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -48,6 +48,7 @@ import { SystemRoles } from "../../../../../utils/enums/enum";
 import { useUpdateProviderMutation } from "../../../../../redux/api/provider";
 import { handleError } from "../../../../../utils/helper";
 import { addProviderSchema } from "../../../../../Schema";
+import { showSuccess } from "../../../../../components/CustomToast";
 
 export function ProviderEditScreen() {
   const navigate = useNavigate();
@@ -84,13 +85,13 @@ export function ProviderEditScreen() {
       })
         .unwrap()
         .catch((error) => handleError(error));
-      // toast.success("Provider updated successfully!");
+   
     },
   });
 
   useEffect(() => {
     if (isSuccess) {
-      toast.success("Updated Successfully")
+      showSuccess("Provider updated successfully!")
       navigate('/admin')
     }
   }, [data]);
@@ -114,7 +115,7 @@ export function ProviderEditScreen() {
     }),
 
     onSubmit: () => {
-      toast.success("Password updated successfully");
+     showSuccess("Password updated successfully");
       passwordFormik.resetForm();
     },
   });
@@ -129,18 +130,18 @@ export function ProviderEditScreen() {
 
   const handleToggle2FA = () => {
     setTwoFactorEnabled(!twoFactorEnabled);
-    toast.success(twoFactorEnabled ? "2FA Disabled" : "2FA Enabled");
+   showSuccess(twoFactorEnabled ? "2FA Disabled" : "2FA Enabled");
   };
 
   const handleGenerateBackupCodes = () => {
     setBackupCodesGenerated(true);
-    toast.success("Backup codes generated");
+   showSuccess("Backup codes generated");
   };
 
   const handleReset2FA = () => {
     setTwoFactorEnabled(false);
     setBackupCodesGenerated(false);
-    toast.success("2FA device reset");
+   showSuccess("2FA device reset");
   };
 
   // LEVEL SUPERVISOR LOGIC
@@ -150,9 +151,7 @@ export function ProviderEditScreen() {
 
   return (
     <div className="min-h-screen bg-[#efefef]">
-      <AppHeader
-        onLogout={() => {}} 
-      />
+      <AppHeader />
 
       <div className="max-w-5xl mx-auto px-6 py-8">
         <Button

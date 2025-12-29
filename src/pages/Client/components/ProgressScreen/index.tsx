@@ -110,7 +110,7 @@ export function ProgressScreen({ clientId }: ProgressScreenProps) {
           Progress Tracking – {apiData?.clientInfo?.name}
         </h3>
         <p className="text-[#395159]">
-          Goal performance over the selected date range
+          Goal performance over the last 30 days
         </p>
       </div>
 

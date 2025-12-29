@@ -1,7 +1,6 @@
-
-import { Button } from '../../../components/Button';
-import { Card } from '../../../components/Card';
-import { Input } from '../../../components/Input';
+import { Button } from "../../../components/Button";
+import { Card } from "../../../components/Card";
+import { Input } from "../../../components/Input";
 
 interface SupportsPanelProps {
   supports: string[];
@@ -33,11 +32,11 @@ export function SupportsPanel({
             key={support}
             onClick={() => onToggleSupport(support)}
             size="sm"
-            variant={supportsObserved.includes(support) ? 'default' : 'outline'}
+            variant={supportsObserved.includes(support) ? "default" : "outline"}
             className={
               supportsObserved.includes(support)
-                ? 'bg-[#395159] text-white hover:bg-[#303630]'
-                : 'border-[#ccc9c0] text-[#303630]'
+                ? "bg-[#395159] text-white hover:bg-[#303630]"
+                : "border-[#ccc9c0] text-[#303630]"
             }
           >
             {support}
@@ -46,25 +45,25 @@ export function SupportsPanel({
         <Button
           onClick={onToggleOther}
           size="sm"
-          variant={showSupportOther ? 'default' : 'outline'}
+          variant={showSupportOther ? "default" : "outline"}
           className={
             showSupportOther
-              ? 'bg-[#395159] text-white hover:bg-[#303630]'
-              : 'border-[#ccc9c0] text-[#303630]'
+              ? "bg-[#395159] text-white hover:bg-[#303630]"
+              : "border-[#ccc9c0] text-[#303630]"
           }
         >
           Other
         </Button>
       </div>
-      
+
       {showSupportOther && (
         <div className="mt-4 flex gap-2">
           <Input
             placeholder="Enter custom support..."
             value={supportOtherText}
-            onChange={(e:any) => onChangeOtherText(e.target.value)}
-            onKeyDown={(e:any) => {
-              if (e.key === 'Enter') {
+            onChange={(e: any) => onChangeOtherText(e.target.value)}
+            onKeyDown={(e: any) => {
+              if (e.key === "Enter") {
                 onAddCustomSupport();
               }
             }}
@@ -82,4 +81,3 @@ export function SupportsPanel({
     </Card>
   );
 }
-

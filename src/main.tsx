@@ -1,17 +1,17 @@
-import { StrictMode } from "react";
+
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.tsx";
 import { Provider } from "react-redux";
-import { Bounce, ToastContainer } from "react-toastify";
+import { Bounce, ToastContainer, Zoom } from "react-toastify";
 import { store } from "./redux/store.ts";
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
+
     <Provider store={store}>
       <ToastContainer
-        position="top-right"
+        position="bottom-right"
         autoClose={1000}
-        hideProgressBar={false}
+        hideProgressBar={true}
         newestOnTop={false}
         closeOnClick={false}
         rtl={false}
@@ -19,9 +19,9 @@ createRoot(document.getElementById("root")!).render(
         draggable
         pauseOnHover
         theme="light"
-        transition={Bounce}
+        transition={Zoom}
       />
       <App />
     </Provider>
-  </StrictMode>
+
 );

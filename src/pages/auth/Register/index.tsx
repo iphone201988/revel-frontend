@@ -13,47 +13,21 @@ import { Input } from "../../../components/Input";
 import { Button } from "../../../components/Button";
 import { useEffect, useState } from "react";
 import { useFormik } from "formik";
-import * as Yup from "yup";
+
 import { useNavigate } from "react-router-dom";
 import "react-phone-input-2/lib/style.css";
 import PhoneInput from "react-phone-input-2";
 import { useOrgRegistrationMutation } from "../../../redux/api/provider";
-import { toast } from "react-toastify";
 
 import { handleError } from "../../../utils/helper";
+import { stepSchemas } from "../../../Schema";
+import { showSuccess } from "../../../components/CustomToast";
 const Register = () => {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [agreedToHIPAA, setAgreedToHIPAA] = useState(false);
   const [step, setStep] = useState(1);
   const navigate = useNavigate();
 
-  const stepSchemas = [
-    Yup.object({
-      clinicName: Yup.string().min(2).required("Clinic name is required"),
-      ownerFirstName: Yup.string().min(2).required("First name is required"),
-      ownerLastName: Yup.string().min(2).required("Last name is required"),
-      email: Yup.string().email().required("Email is required"),
-    }),
-
-    Yup.object({
-      phone: Yup.string().required("Phone is required"),
-      clinicAddress: Yup.string().min(5).required("Address is required"),
-      clinicCity: Yup.string().required("City is required"),
-      clinicState: Yup.string().required("State is required"),
-      clinicZip: Yup.string()
-        .matches(/^[0-9]{5,6}$/, "Invalid ZIP")
-        .required("ZIP is required"),
-    }),
-
-    Yup.object({
-      password: Yup.string()
-        .min(8)
-        .required("Password is required"),
-      confirmPassword: Yup.string()
-        .oneOf([Yup.ref("password")], "Passwords do not match")
-        .required("Confirm password is required"),
-    }),
-  ];
   const [orgRegistration, { data }] = useOrgRegistrationMutation();
 
   const formik = useFormik({
@@ -75,16 +49,47 @@ const Register = () => {
     validationSchema: stepSchemas[step - 1],
 
     onSubmit: (values) => {
-          const { confirmPassword, ...payload } = values;
-      orgRegistration(payload).unwrap().catch((error)=> handleError(error));
+      const { confirmPassword, ...payload } = values;
+      orgRegistration(payload)
+        .unwrap()
+        .catch((error) => handleError(error));
       // API call here
     },
   });
+  const step1Valid =
+    formik.values.clinicName &&
+    formik.values.ownerFirstName &&
+    formik.values.ownerLastName &&
+    formik.values.email &&
+    !formik.errors.clinicName &&
+    !formik.errors.ownerFirstName &&
+    !formik.errors.ownerLastName &&
+    !formik.errors.email;
+
+  const step2Valid =
+    formik.values.phone &&
+    formik.values.clinicAddress &&
+    formik.values.clinicCity &&
+    formik.values.clinicState &&
+    formik.values.clinicZip &&
+    !formik.errors.phone &&
+    !formik.errors.clinicAddress &&
+    !formik.errors.clinicCity &&
+    !formik.errors.clinicState &&
+    !formik.errors.clinicZip;
+
+  const step3Valid =
+    formik.values.password &&
+    formik.values.confirmPassword &&
+    !formik.errors.password &&
+    !formik.errors.confirmPassword &&
+    agreedToTerms &&
+    agreedToHIPAA;
 
   useEffect(() => {
     if (data?.success) {
-      toast.success("Organization registered successfully..");
-      navigate('/verify' , {state: {Email:formik?.values?.email}})
+      showSuccess("Organization registered successfully..");
+      navigate("/verify", { state: { Email: formik?.values?.email } });
     }
   }, [data]);
 
@@ -274,18 +279,21 @@ const Register = () => {
                         <PhoneInput
                           country="in"
                           enableSearch
-                          value={`${formik.values.countryCode}${formik.values.phone}`}
+                          value={`${formik?.values?.countryCode}${formik?.values?.phone}`}
                           onChange={(value, data) => {
-                            const dialCode = `+${data?.dialCode}`;
+                            if (data && "dialCode" in data) {
+                              const dialCode = `+${data.dialCode}`;
+                              const localNumber = value.replace(
+                                data.dialCode,
+                                ""
+                              );
 
-                            // Remove country code from number
-                            const localNumber = value.replace(
-                              data?.dialCode,
-                              ''
-                            );
-
-                            formik.setFieldValue("countryCode", dialCode);
-                            formik.setFieldValue("phone", localNumber);
+                              formik.setFieldValue("countryCode", dialCode);
+                              formik.setFieldValue("phone", localNumber);
+                            } else {
+                              formik.setFieldValue("countryCode", "");
+                              formik.setFieldValue("phone", value);
+                            }
                           }}
                           onBlur={() => {
                             formik.setFieldTouched("phone", true);
@@ -523,14 +531,20 @@ const Register = () => {
                   <Button
                     type="button"
                     onClick={handleNext}
-                    className="flex-1 h-12 bg-[#395159] hover:bg-[#303630] text-white"
+                    disabled={
+                      (step === 1 && !step1Valid) || (step === 2 && !step2Valid)
+                    }
+                    className={`flex-1 h-12 text-white transition
+      ${(step === 1 && step1Valid) || (step === 2 && step2Valid)? "bg-[#395159] hover:bg-[#303630]": "bg-gray-400 cursor-not-allowed"}`}
                   >
                     Continue
                   </Button>
                 ) : (
                   <Button
                     type="submit"
-                    className="flex-1 h-12 bg-[#395159] hover:bg-[#303630] text-white"
+                    disabled={!step3Valid}
+                    className={`flex-1 h-12 text-white transition
+                    ${ step3Valid? "bg-[#395159] hover:bg-[#303630]"  : "bg-gray-400 cursor-not-allowed"} `}
                   >
                     Create Account & Start Trial
                   </Button>

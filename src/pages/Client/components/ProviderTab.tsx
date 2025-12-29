@@ -7,9 +7,9 @@ import { Separator } from '../../../components/Seprator';
 import { Popover, PopoverContent, PopoverTrigger } from '../../../components/PopOver';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../../../components/Command';
 import type{ Provider } from './types';
-import { toast } from 'react-toastify';
 import { useUpdateClientMutation } from '../../../redux/api/provider';
 import { handleError } from '../../../utils/helper';
+import { showError, showSuccess } from '../../../components/CustomToast';
 
 interface ProvidersSectionProps {
   clientId: string
@@ -31,7 +31,7 @@ export function ProvidersSection({ providers, initialAssigned , clientId}: Provi
 
   useEffect(() => {
     if (isUpdated) {
-      toast.success(updatedData?.message || 'Client updated successfully');
+      showSuccess(updatedData?.message || 'Client updated successfully');
     }
   }, [isUpdated, updatedData]);
 
@@ -39,13 +39,12 @@ export function ProvidersSection({ providers, initialAssigned , clientId}: Provi
      providers.find((p: any) => p._id === providerId);
 
     try {
-      // Call API with full updated array
       await updateClient({ clientId, data: { assignedProvider: newAssigned } }).unwrap().catch((error)=> handleError(error));
 
-      setAssignedProviders(newAssigned); // Update local state
+      setAssignedProviders(newAssigned);
   
     } catch (err: any) {
-      toast.error(err?.data?.message || `Failed to ${action} provider`);
+      showError(err?.data?.message || `Failed to ${action} provider`);
     }
   };
 

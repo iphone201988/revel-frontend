@@ -2,7 +2,8 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: "http://localhost:2001/api",
+  // baseUrl: "https://7a3ecf88eb3d.ngrok-free.app/api",
+  baseUrl: " https://957695527930.ngrok-free.app/api",
   prepareHeaders: (headers) => {
     const auth = localStorage.getItem("token");
     headers.set("ngrok-skip-browser-warning", "69420");
@@ -22,12 +23,21 @@ const USER_TAG = "USER";
 const CLIENT_TAG = "CLIENT";
 const GOAL_TAG = "GOAL";
 const PERMISSION_TAG = "PERMISSIONS";
-const ACTIVITY_TAG = "ACTIVITY"
-const SUPPORT_TAG = "SUPPORT"
+const ACTIVITY_TAG = "ACTIVITY";
+const SUPPORT_TAG = "SUPPORT";
+const AUDIT_TAG = "AUDIT";
 export const providerApi = createApi({
   reducerPath: "providerApi",
   baseQuery,
-  tagTypes: [USER_TAG, CLIENT_TAG, GOAL_TAG, PERMISSION_TAG,ACTIVITY_TAG, SUPPORT_TAG],
+  tagTypes: [
+    AUDIT_TAG,
+    USER_TAG,
+    CLIENT_TAG,
+    GOAL_TAG,
+    PERMISSION_TAG,
+    ACTIVITY_TAG,
+    SUPPORT_TAG,
+  ],
   endpoints: (builder) => ({
     orgRegistration: builder.mutation({
       query: (body) => ({
@@ -44,11 +54,11 @@ export const providerApi = createApi({
       }),
     }),
     logout: builder.mutation<void, void>({
-      query:()=>({
-         url:'/provider/logout',
-         method: 'PUT'
+      query: () => ({
+        url: "/provider/logout",
+        method: "PUT",
       }),
-      invalidatesTags: [USER_TAG]
+      invalidatesTags: [USER_TAG],
     }),
 
     verifyOtp: builder.mutation({
@@ -127,28 +137,28 @@ export const providerApi = createApi({
       }),
       invalidatesTags: [GOAL_TAG],
     }),
-  
+
     getGoals: builder.query<any, void>({
       query: () => ({
         url: "/provider/goal",
       }),
       providesTags: [GOAL_TAG],
-    }), 
-    deleteGoal :builder.mutation({
-      query: (goalId)=>({
-          url:`/provider/deleteGoal?goalId=${goalId}`,
-          method:"DELETE"
+    }),
+    deleteGoal: builder.mutation({
+      query: (goalId) => ({
+        url: `/provider/deleteGoal?goalId=${goalId}`,
+        method: "DELETE",
       }),
-      invalidatesTags:[GOAL_TAG]
+      invalidatesTags: [GOAL_TAG],
     }),
 
-    editGoal : builder.mutation({
-     query: ({goalId, data})=>({
-        url:`/provider/editGoalBank?goalId=${goalId}`,
-        method:"PUT",
-        body:data
-     }),
-     invalidatesTags: [GOAL_TAG]
+    editGoal: builder.mutation({
+      query: ({ goalId, data }) => ({
+        url: `/provider/editGoalBank?goalId=${goalId}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: [GOAL_TAG],
     }),
     viewPermissions: builder.query<any, string>({
       query: (providerId) => ({
@@ -185,6 +195,7 @@ export const providerApi = createApi({
           method: "GET",
         };
       },
+      providesTags: [AUDIT_TAG],
     }),
     viewStats: builder.query<any, void>({
       query: () => ({
@@ -241,7 +252,7 @@ export const providerApi = createApi({
         method: "POST",
         body,
       }),
-      invalidatesTags:[CLIENT_TAG]
+      invalidatesTags: [CLIENT_TAG],
     }),
 
     generateNotes: builder.mutation({
@@ -262,7 +273,7 @@ export const providerApi = createApi({
         method: "POST",
         body,
       }),
-      invalidatesTags: [ACTIVITY_TAG]
+      invalidatesTags: [ACTIVITY_TAG],
     }),
     addSupport: builder.mutation({
       query: (body) => ({
@@ -270,44 +281,154 @@ export const providerApi = createApi({
         method: "POST",
         body,
       }),
-      invalidatesTags:[SUPPORT_TAG]
+      invalidatesTags: [SUPPORT_TAG],
     }),
     getActivities: builder.query<any, void>({
       query: () => ({
         url: "/session/activity",
         method: "GET",
       }),
-      providesTags: [ACTIVITY_TAG]
+      providesTags: [ACTIVITY_TAG],
     }),
     getSupports: builder.query<any, void>({
       query: () => ({
         url: "/session/support",
         method: "GET",
       }),
-      providesTags: [SUPPORT_TAG]
+      providesTags: [SUPPORT_TAG],
     }),
     saveSignature: builder.mutation({
-      query:(body)=>({
-        url: '/session/report',
+      query: (body) => ({
+        url: "/session/report",
         method: "PUT",
-        body
-      })
+        body,
+      }),
     }),
 
-    getArchivedGoals : builder.query<any, any>({
-      query: (clientId)=>({
-        url:`/provider/archived?clientId=${clientId}`
-      })
+    getArchivedGoals: builder.query<any, any>({
+      query: (clientId) => ({
+        url: `/provider/archived?clientId=${clientId}`,
+      }),
     }),
     progressReport: builder.query<any, any>({
-       query: (clientId)=>({
-        url:`/provider/progressReport?clientId=${clientId}`
-      })
+      query: (clientId) => ({
+        url: `/provider/progressReport?clientId=${clientId}`,
+      }),
     }),
     goalReview: builder.query<any, any>({
-       query: (clientId)=>({
-        url:`/provider/goalProgress?clientId=${clientId}`
-      })
+      query: (clientId) => ({
+        url: `/provider/goalProgress?clientId=${clientId}`,
+      }),
+    }),
+
+    submitTicket: builder.mutation({
+      query: (body) => ({
+        url: "/org/submit",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    //report module-------------------
+    reportsOverview: builder.query<any, { dateRange?: string } | void>({
+      query: (params) => ({
+        url: `/org/overview`,
+        params: {
+          dateRange: params?.dateRange ?? "30",
+        },
+      }),
+    }),
+
+    clientProgressReports: builder.query<
+      any,
+      { dateRange?: string; selectedClient?: string } | void
+    >({
+      query: (params) => ({
+        url: `/org/client-progress`,
+        params: {
+          dateRange: params?.dateRange ?? "30",
+          selectedClient: params?.selectedClient ?? "all",
+        },
+      }),
+    }),
+
+    providerActivityReports: builder.query<
+      any,
+      { dateRange?: string; selectedProvider?: string } | void
+    >({
+      query: (params) => ({
+        url: `/org/provider-activity`,
+        params: {
+          dateRange: params?.dateRange ?? "30",
+          selectedProvider: params?.selectedProvider ?? "all",
+        },
+      }),
+    }),
+
+    // download apis
+    donloadFedecDistribution: builder.mutation({
+      query: (body) => ({
+        url: "/download/fedec",
+        method: "POST",
+        body,
+        responseHandler: (response) => response.blob(),
+      }),
+      invalidatesTags: [AUDIT_TAG],
+    }),
+    downloadSessionTrend: builder.mutation({
+      query: (body) => ({
+        url: "/download/sessionTrends",
+        method: "POST",
+        body,
+        responseHandler: (response) => response.blob(),
+      }),
+      invalidatesTags: [AUDIT_TAG],
+    }),
+    downloadDaignosisBreakdown: builder.mutation({
+      query: (body) => ({
+        url: "/download/breakDown",
+        method: "POST",
+        body,
+        responseHandler: (response) => response.blob(),
+      }),
+      invalidatesTags: [AUDIT_TAG],
+    }),
+
+    downloadGoalReviewReport: builder.mutation({
+      query: (body) => ({
+        url: "/download/goalReview",
+        method: "POST",
+        body,
+        responseHandler: (response) => response.blob(),
+      }),
+      invalidatesTags: [AUDIT_TAG],
+    }),
+    downloadSessionNotes: builder.mutation({
+      query: (body) => ({
+        url: "/download/sessionNote",
+        method: "POST",
+        body,
+        responseHandler: (response) => response.blob(),
+      }),
+      invalidatesTags: [AUDIT_TAG],
+    }),
+    downloadAuditlogs: builder.mutation<any, void>({
+      query: (body) => ({
+        url: "/download/audits",
+        method: "POST",
+        body,
+        responseHandler: (response) => response.blob(),
+      }),
+      invalidatesTags: [AUDIT_TAG],
+    }),
+
+    downloadSessionHistory: builder.mutation<any, void>({
+      query: (goalBankId) => ({
+        url: `/download/session?goalBankId=${goalBankId}`,
+        method: "POST",
+        responseHandler: (response) => response.blob(),
+      }),
+      invalidatesTags: [AUDIT_TAG],
     }),
   }),
 });
@@ -349,5 +470,16 @@ export const {
   useDeleteGoalMutation,
   useEditGoalMutation,
   useLogoutMutation,
- useGoalReviewQuery
+  useGoalReviewQuery,
+  useClientProgressReportsQuery,
+  useProviderActivityReportsQuery,
+  useReportsOverviewQuery,
+  useSubmitTicketMutation,
+  useDonloadFedecDistributionMutation,
+  useDownloadSessionTrendMutation,
+  useDownloadDaignosisBreakdownMutation,
+  useDownloadGoalReviewReportMutation,
+  useDownloadSessionNotesMutation,
+  useDownloadAuditlogsMutation,
+  useDownloadSessionHistoryMutation,
 } = providerApi;

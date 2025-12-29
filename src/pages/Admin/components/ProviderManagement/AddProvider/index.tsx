@@ -12,13 +12,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../../../../components/Select";
-import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
-import * as Yup from "yup";
 import PhoneInput, { type CountryData } from "react-phone-input-2";
 import { useAddProviderMutation } from "../../../../../redux/api/provider";
 import { RoleOptions } from "../../../../../Constant";
+import { handleError } from "../../../../../utils/helper";
+import { providerSchema } from "../../../../../Schema";
+import { showSuccess } from "../../../../../components/CustomToast";
 
 export function ProviderAddScreen() {
   const navigate = useNavigate();
@@ -26,19 +27,7 @@ export function ProviderAddScreen() {
   const [addProvider, { data, isSuccess }] = useAddProviderMutation();
 
   // -------------------- VALIDATION --------------------
-  const providerSchema = Yup.object({
-    name: Yup.string().trim().required("Provider name is required"),
-    credential: Yup.string().trim().required("Credential is required"),
-    clinicRole: Yup.string().trim().required("Clinic role is required"),
-    systemRole: Yup.string().trim().required("System role is required"),
-    email: Yup.string()
-      .trim()
-      .email("Enter valid email")
-      .required("Email is required"),
-    phone: Yup.string().optional(),
-    countryCode: Yup.string().optional(),
-    licenseNumber: Yup.string().optional(),
-  });
+  
 
   // -------------------- FORMIK --------------------
   const formik = useFormik({
@@ -56,14 +45,14 @@ export function ProviderAddScreen() {
     validateOnChange: false,
     validateOnBlur: false,
     onSubmit: (values) => {
-      addProvider(values);
+      addProvider(values).unwrap().catch((error)=>handleError(error));
 
       navigate("/admin");
     },
   });
   useEffect(() => {
     if (isSuccess) {
-      toast.success("Provider added Successfully");
+      showSuccess("Provider added Successfully");
     }
   }, [data]);
 
@@ -80,7 +69,7 @@ export function ProviderAddScreen() {
 
   return (
     <div className="min-h-screen bg-[#efefef]">
-      <AppHeader onLogout={() => {}} />
+      <AppHeader  />
 
       <div className="max-w-4xl mx-auto px-6 py-8">
         <Button

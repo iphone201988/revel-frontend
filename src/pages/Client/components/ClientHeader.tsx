@@ -11,15 +11,12 @@ interface ClientHeaderProps {
   dob: string;
   age: number;
   diagnosis: string;
-  
-  onLogout: () => void;
 }
-
-export function ClientHeader({ clientName, dob, age, diagnosis, onLogout }: ClientHeaderProps) {
+export function ClientHeader({ clientName, dob, age, diagnosis,  }: ClientHeaderProps) {
     const navigate = useNavigate()
   return (
     <>
-      <AppHeader onLogout={()=>{}} />
+      <AppHeader />
       <div className="max-w-screen-2xl mx-auto px-6 py-8">
         <Button
           onClick={() => navigate('/')}

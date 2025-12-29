@@ -20,20 +20,16 @@ import {
   SelectValue,
 } from "../../../components/Select";
 import { RadioGroup, RadioGroupItem } from "../../../components/Radio-group";
-// import { Screen } from '../App';
-import { toast } from "react-toastify";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useStartSessionMutation } from "../../../redux/api/provider";
 import { handleError } from "../../../utils/helper";
 import { SessionType } from "../../../utils/enums/enum";
 import { useFormik } from "formik";
-
-
+import { showSuccess } from "../../../components/CustomToast";
 
 export function SessionInitiationScreen() {
   const navigate = useNavigate();
   const combineDateAndTime = (date: string, time: string) => {
-  
     return new Date(`${date}T${time}:00`).toISOString();
   };
 
@@ -50,17 +46,18 @@ export function SessionInitiationScreen() {
   const client = location?.state?.client;
   const currentUser = location?.state?.currentUser;
 
-
   // Pre-populate from sessionInitData if coming from calendar, otherwise use defaults
- const sessionInitData = data?.data
+  const sessionInitData = data?.data;
   const [sessionType, setSessionType] = useState(
     SessionType?.Progress_Monitoring
   );
 
   useEffect(() => {
     if (isSuccess) {
-      toast.success('Session Started')  
-      navigate('/session-data-collection', {state: { sessionInitData:data?.data}})
+      showSuccess("Session Started");
+      navigate("/session-data-collection", {
+        state: { sessionInitData: data?.data },
+      });
     }
   }, [data]);
 
@@ -105,15 +102,13 @@ export function SessionInitiationScreen() {
         clientVariables: values.clientVariables || undefined,
       };
 
-      startSession(sessionData)
-        .unwrap()
-        .catch(handleError);
+      startSession(sessionData).unwrap().catch(handleError);
     },
   });
 
   return (
     <div className="min-h-screen bg-[#efefef]">
-      <AppHeader  />
+      <AppHeader />
 
       <div className="max-w-4xl mx-auto px-6 py-8">
         <Button
@@ -298,6 +293,7 @@ export function SessionInitiationScreen() {
                   style={{ paddingLeft: "35px" }}
                   value={formik.values.attendees}
                   onChange={formik.handleChange}
+                  placeholder="e.g.  Therapist, Parent, Sibling"
                 />
               </div>
               <p className="text-sm text-[#395159]">
@@ -310,6 +306,8 @@ export function SessionInitiationScreen() {
               <Textarea
                 name="clientVariables"
                 value={formik.values.clientVariables}
+                placeholder="Note any relevant variables: sleep quality, medication changes, recent events, mood observations, etc."
+                className="min-h-32"
                 onChange={formik.handleChange}
               />
 

@@ -69,14 +69,14 @@ export interface GoalDataPanelProps {
   removedGoals: Goal[];
   goalStates: { [key: string]: GoalState };
   collapsedGoals: { [key: string]: boolean };
-  showSupportSelector: { goalId: string; type: 'success' | 'miss' } ;
+  showSupportSelector: { goalId: string; type: 'success' | 'miss' } |null;
   onCollapseAll: () => void;
   onExpandAll: () => void;
   onToggleCollapse: (goalId: string) => void;
   onRemoveGoal: (goalId: string) => void;
   onReAddGoal: (goalId: string) => void;
   onSetSupportSelector: (payload: { goalId: string; type: 'success' | 'miss' } | null) => void;
-  onAddTrial: (goalId: string, type: 'success' | 'miss', SupportLevel: 'Independent' | 'Minimal' | 'Moderate' ) => void;
+  onAddTrial: (goalId: string, type: 'success' | 'miss'|null|undefined, SupportLevel: 'Independent' | 'Minimal' | 'Moderate' ) => void;
   onResetCounter: (goalId: string) => void;
   onIncrementCounter: (goalId: string) => void;
   onDecrementCounter: (goalId: string) => void;

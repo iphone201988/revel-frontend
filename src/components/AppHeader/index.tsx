@@ -9,8 +9,8 @@ import { Button } from '../Button';
 import { useNavigate } from 'react-router-dom';
 import { useLogoutMutation } from '../../redux/api/provider';
 import { handleError } from '../../utils/helper';
-import { toast } from 'react-toastify';
-
+import { showSuccess } from '../CustomToast';
+import logo from '../../assets/20b7e623cc990aeea0ffd948678d4d0e46e1aa8d.png';
 
 export function AppHeader() {
   
@@ -20,7 +20,7 @@ export function AppHeader() {
 
     const handleLogout = async()=>{
      await logout().unwrap().catch((error)=> handleError(error))
-     toast.success('Logout Successfully')
+     showSuccess('Logout Successfully')
      navigate('/login')
     }
   return (
@@ -28,7 +28,7 @@ export function AppHeader() {
       <div className="max-w-screen-2xl mx-auto px-6 py-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            {/* <img src={logo} alt="DIR DataFlow by Infinity Therapy LLC" style={{ height: '120px', width: 'auto' }} /> */}
+            <img src={logo} alt="DIR DataFlow by Infinity Therapy LLC" style={{ height: '120px', width: 'auto' }} />
           </div>
 
           <div className="flex items-center gap-4">

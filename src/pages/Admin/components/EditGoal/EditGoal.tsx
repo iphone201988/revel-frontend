@@ -20,10 +20,12 @@ import { useFormik } from "formik";
 import { SupportLevelOptions } from "../../../../Constant";
 import { SupportLevel } from "../../../../utils/enums/enum";
 import { goalSchema } from "../../../../Schema";
-import { toast } from "react-toastify";
+
 import { useEditGoalMutation } from "../../../../redux/api/provider";
 import { SelectBox } from "../../../../components/SelectBox";
 import { GoalBankCategory } from "../../../../Constant";
+import { handleError } from "../../../../utils/helper";
+import { showError, showSuccess } from "../../../../components/CustomToast";
 
 const EditGoalPopup = ({ open, onClose, goal }: any) => {
   const [editGoal, { isLoading }] = useEditGoalMutation();
@@ -58,12 +60,12 @@ const EditGoalPopup = ({ open, onClose, goal }: any) => {
               supportLevel: values.supportLevel,
             },
           },
-        }).unwrap();
+        }).unwrap().catch((error)=>handleError(error));
 
-        toast.success("Goal updated successfully");
+       showSuccess("Goal updated successfully");
         onClose();
       } catch (error: any) {
-        toast.error(error?.data?.message || "Failed to update goal");
+      showError(error?.data?.message || "Failed to update goal");
       }
     },
   });

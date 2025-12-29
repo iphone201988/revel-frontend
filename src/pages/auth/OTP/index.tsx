@@ -6,10 +6,10 @@ import { useEffect, useState } from "react";
 import {
   useSendOtpMutation,
   useVerifyOtpMutation,
-} from "../../../redux/api/provider";
-import { toast } from "react-toastify";
+} from "../../../redux/api/provider"; 
 import { useLocation, useNavigate } from "react-router-dom";
 import { handleError } from "../../../utils/helper";
+import { showSuccess } from "../../../components/CustomToast";
 
 const VerifyOtp = () => {
   const location = useLocation();
@@ -23,7 +23,7 @@ const VerifyOtp = () => {
   useEffect(() => {
     if (isSuccess) {
       console.log("profile data", data);
-      toast.success("Account Verified Successfully");
+      showSuccess("Account Verified Successfully");
       localStorage.setItem("token", data?.data?.token);
       navigate("/");
     }
@@ -36,7 +36,7 @@ const VerifyOtp = () => {
 
   useEffect(() => {
     if (otpData?.success) {
-      toast.success("OTP is send to email Successfully");
+      showSuccess("New verification code sent to your email");
       localStorage.setItem("token", data?.data?.token);
     }
   }, [otpData]);
@@ -64,7 +64,7 @@ const VerifyOtp = () => {
             <div>
               <p className="text-[#303630]">Check your email</p>
               <p className="text-sm text-[#395159]">
-                We've sent a secure verification code to provider@example.com
+                We've sent a secure verification code to {email}
               </p>
             </div>
           </div>
@@ -79,44 +79,43 @@ const VerifyOtp = () => {
               inputStyle="!w-20 h-14"
               renderSeparator={<span></span>}
               renderInput={(props) => <input {...props} />}
-            /> */}  
+            /> */}
             <OTPInput
-  value={otp}
-  onChange={setOtp}
-  numInputs={6}
-  // use text + inputMode instead of inputType="number"
-  inputType="text"
-  containerStyle="flex justify-between gap-2"
-  inputStyle={{
-    width: "3rem",
-    height: "3rem",
-    borderRadius: "0.5rem",
-    border: "2px solid #395159",
-    textAlign: "center",
-    fontSize: "1.25rem",
-    fontWeight: 600,
-    color: "#303630",
-    backgroundColor: "#ffffff",
-    outline: "none",
-  }}
-  renderSeparator={<span className="w-2" />}
-  renderInput={(props) => (
-    <input
-      {...props}
-      inputMode="numeric"       // mobile numeric keyboard
-      pattern="[0-9]*"          // restrict to digits
-      maxLength={1}
-    />
-  )}
-/>
-
+              value={otp}
+              onChange={setOtp}
+              numInputs={6}
+              // use text + inputMode instead of inputType="number"
+              inputType="text"
+              containerStyle="flex justify-between gap-2"
+              inputStyle={{
+                width: "3rem",
+                height: "3rem",
+                borderRadius: "0.5rem",
+                border: "2px solid #395159",
+                textAlign: "center",
+                fontSize: "1.25rem",
+                fontWeight: 600,
+                color: "#303630",
+                backgroundColor: "#ffffff",
+                outline: "none",
+              }}
+              renderSeparator={<span className="w-2" />}
+              renderInput={(props) => (
+                <input
+                  {...props}
+                  inputMode="numeric" // mobile numeric keyboard
+                  pattern="[0-9]*" // restrict to digits
+                  maxLength={1}
+                />
+              )}
+            />
 
             {/* </div> */}
 
             <Button
               onClick={handleVerify}
               className="w-full h-12 bg-[#395159] hover:bg-[#303630] text-white"
-              // disabled={code.length !== 6}
+              disabled={otp.length !== 6}
             >
               {isLoading ? "Verifying..." : "Verify & Continue"}
             </Button>

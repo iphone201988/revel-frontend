@@ -1,4 +1,4 @@
-import { Activity, User, FileText, ArrowLeft } from "lucide-react";
+import { Activity, User, FileText } from "lucide-react";
 import { Button } from "../../../../components/Button";
 import { Card } from "../../../../components/Card";
 import { Badge } from "../../../../components/Badge";
@@ -22,14 +22,7 @@ export function AuditSummary() {
   const activeUser = localStorage.getItem("activeUser");
   return (
     <>
-      <Button
-        onClick={() => navigate("/")}
-        variant="outline"
-        className="border-[#395159] text-[#395159] mb-3"
-      >
-        <ArrowLeft className="w-4 h-4 mr-2" />
-        Back to Dashboard
-      </Button>
+    
       <Card className="p-6 bg-white mb-6">
         <div className="flex items-center justify-between">
           <div>
@@ -81,8 +74,8 @@ export function AuditSummary() {
               <FileText className="w-5 h-5 text-white" />
             </div>
             <div>
-              <p className="text-sm text-[#395159]">Exports This Week</p>
-              <p className="text-[#303630]">12 PDFs</p>
+              <p className="text-sm text-[#395159]">Exports This Week</p> 
+              <p className="text-[#303630]">{data?.data?.exportThisWeek} PDFs</p>
             </div>
           </div>
         </Card>

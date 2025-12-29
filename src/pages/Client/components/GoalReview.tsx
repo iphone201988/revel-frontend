@@ -11,20 +11,9 @@ import {
 import { Button } from "../../../components/Button";
 import { Card } from "../../../components/Card";
 import { Badge } from "../../../components/Badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../../components/Select";
 import { Progress } from "../../../components/Progress/Progress";
-
-import { toast } from "react-toastify";
 import { useLocation, useNavigate } from "react-router-dom";
-import {
-  useGoalReviewQuery,
-} from "../../../redux/api/provider";
+import { useGoalReviewQuery } from "../../../redux/api/provider";
 
 const statusOptions = [
   { value: "Mastered", label: "Mastered", color: "bg-green-500" },
@@ -48,13 +37,6 @@ export function GoalReviewScreen() {
   const { data, isLoading } = useGoalReviewQuery(clientId, {
     skip: !clientId,
   });
-
-  console.log("review report :::::::::::::::::", data?.data);
-
-  const handleStatusChange = (goalId: string, newStatus: string) => {
-    // TODO: Implement API call to update goal status
-    toast.success("Goal status updated");
-  };
 
   const getStatusColor = (status: string) => {
     return (
@@ -85,8 +67,10 @@ export function GoalReviewScreen() {
   };
 
   const getTrendIcon = (trend: string) => {
-    if (trend === "increasing") return <TrendingUp className="w-5 h-5 text-green-500" />;
-    if (trend === "declining") return <TrendingDown className="w-5 h-5 text-red-500" />;
+    if (trend === "increasing")
+      return <TrendingUp className="w-5 h-5 text-green-500" />;
+    if (trend === "declining")
+      return <TrendingDown className="w-5 h-5 text-red-500" />;
     return <MinusIcon className="w-5 h-5 text-yellow-500" />;
   };
 
@@ -112,7 +96,7 @@ export function GoalReviewScreen() {
     );
   }
 
-  const { clientInfo,  goalsProgress, summary } = data.data;
+  const { clientInfo, goalsProgress, summary } = data.data;
 
   return (
     <div className="min-h-screen bg-[#efefef]">
@@ -130,9 +114,7 @@ export function GoalReviewScreen() {
 
         <div className="mb-6">
           <h2 className="text-[#303630] mb-2">Goal Progress Review</h2>
-          <p className="text-[#395159]">
-            {clientInfo.name} • Last 30 Days
-          </p>
+          <p className="text-[#395159]">{clientInfo.name} • Last 30 Days</p>
         </div>
 
         <Card className="mb-6 p-4 bg-blue-50 border-blue-200">
@@ -153,8 +135,10 @@ export function GoalReviewScreen() {
         <div className="grid gap-4">
           {goalsProgress.map((goal: any) => {
             // Get the appropriate average based on support level
-            const supportLevelKey = goal.supportLevel?.toLowerCase() || 'independent';
-            const avgPercentage = goal.averages[supportLevelKey] || goal.averages.overall;
+            const supportLevelKey =
+              goal.supportLevel?.toLowerCase() || "independent";
+            const avgPercentage =
+              goal.averages[supportLevelKey] || goal.averages.overall;
 
             return (
               <Card key={goal.goalId} className="p-6 bg-white">
@@ -173,9 +157,14 @@ export function GoalReviewScreen() {
                       </Badge>
                       <Badge
                         variant="outline"
-                        className={getSupportLevelColor(goal.supportLevel || 'Independent')}
+                        className={getSupportLevelColor(
+                          goal.supportLevel || "Independent"
+                        )}
                       >
-                        Mastery: {getSupportLevelLabel(goal.supportLevel || 'Independent')}
+                        Mastery:{" "}
+                        {getSupportLevelLabel(
+                          goal.supportLevel || "Independent"
+                        )}
                       </Badge>
                     </div>
 
@@ -195,7 +184,11 @@ export function GoalReviewScreen() {
                                 : "text-amber-600"
                             }`}
                           >
-                            at {getSupportLevelLabel(goal.supportLevel || 'Independent')} level
+                            at{" "}
+                            {getSupportLevelLabel(
+                              goal.supportLevel || "Independent"
+                            )}{" "}
+                            level
                           </span>
                         </p>
                         <div className="flex items-center gap-3">
@@ -220,10 +213,7 @@ export function GoalReviewScreen() {
                           Progress to Mastery
                         </p>
                         <div className="flex items-center gap-2">
-                          <Progress
-                            value={avgPercentage}
-                            className="flex-1"
-                          />
+                          <Progress value={avgPercentage} className="flex-1" />
                           <span className="text-sm text-[#303630]">
                             {avgPercentage}%
                           </span>
@@ -236,7 +226,17 @@ export function GoalReviewScreen() {
 
                     <div className="flex items-center gap-4">
                       <div className="flex-1 max-w-xs">
-                        <Select
+                        {/* <div className="flex items-center gap-2">
+                              <Badge
+                        className={`${getStatusColor(
+                          goal.currentStatus
+                        )} text-white`}
+                      > 
+                        {getStatusLabel(goal.currentStatus)}
+                      </Badge>
+                                </div> */}
+
+                        {/* <Select
                           value={goal.currentStatus}
                           onValueChange={(value) =>
                             handleStatusChange(goal.goalId, value)
@@ -260,7 +260,7 @@ export function GoalReviewScreen() {
                               </SelectItem>
                             ))}
                           </SelectContent>
-                        </Select>
+                        </Select> */}
                       </div>
 
                       {avgPercentage >= goal.target && (
@@ -271,9 +271,6 @@ export function GoalReviewScreen() {
                       )}
                     </div>
                   </div>
-
-                  
-               
                 </div>
               </Card>
             );
@@ -289,7 +286,9 @@ export function GoalReviewScreen() {
             </div>
             <div>
               <p className="text-sm text-[#395159]">In Progress</p>
-              <p className="text-2xl text-blue-600">{summary.goalsInProgress}</p>
+              <p className="text-2xl text-blue-600">
+                {summary.goalsInProgress}
+              </p>
             </div>
             <div>
               <p className="text-sm text-[#395159]">Mastered</p>
@@ -297,7 +296,9 @@ export function GoalReviewScreen() {
             </div>
             <div>
               <p className="text-sm text-[#395159]">Discontinued</p>
-              <p className="text-2xl text-red-600">{summary.goalsDiscontinued}</p>
+              <p className="text-2xl text-red-600">
+                {summary.goalsDiscontinued}
+              </p>
             </div>
           </div>
 

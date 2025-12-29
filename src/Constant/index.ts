@@ -1,7 +1,5 @@
 import { SupportLevel } from "../utils/enums/enum";
 
-
-
 export const GoalBankCategory: string[] = [
   "FEDC 1 - Shared Attention & Regulation",
   "FEDC 2 - Engagement & Relating",
@@ -23,7 +21,7 @@ export const AuditActionOptions = {
   "Update Client": "Update Client",
   "Start Session": "Start Session",
   "View Audit Logs": "View Audit Logs",
-} 
+};
 
 export const AuditResourceOptions = {
   all: "All resources",
@@ -33,7 +31,7 @@ export const AuditResourceOptions = {
   Provider: "Provider",
   Goal: "Goal",
   "Audit Logs": "Audit Logs",
-} 
+};
 export const AuditLogTableHeaders: string[] = [
   "Timestamp",
   "User",
@@ -41,7 +39,6 @@ export const AuditLogTableHeaders: string[] = [
   "Resource",
   "Status",
   "IP Address",
- 
 ];
 
 export const SupportLevelOptions = [
@@ -65,12 +62,58 @@ export const RoleOptions = [
 ];
 
 export const ClientProfileFields = [
-  { id: "interests", label: "Child's Interests & Preferences", key: "interests" },
-  { id: "strengths", label: "Strengths & Learning Style", key: "strengths" },
-  { id: "challenges", label: "Areas of Challenge", key: "challenges" },
-  { id: "familyContext", label: "Family Context", key: "familyContext" },
-  { id: "preferredActivities", label: "Preferred Activities for Engagement", key: "preferredActivities" },
-  { id: "sensoryProcessing", label: "Sensory Processing", key: "sensoryProcessing" },
-  { id: "communication", label: "Communication", key: "communication" },
-  { id: "safetyConsiderations", label: "Safety Considerations", key: "safetyConsiderations" },
-] 
+  {
+    id: "interests",
+    label: "Child's Interests & Preferences",
+    key: "interests",
+    placeholder:
+      "What does the child enjoy? Favorite toys, activities, etc.",
+  },
+  {
+    id: "strengths",
+    label: "Strengths & Learning Style",
+    key: "strengths",
+    placeholder: "What are the child's strengths? How do they learn best?",
+  },
+  {
+    id: "challenges",
+    label: "Areas of Challenge",
+    key: "challenges",
+    placeholder:
+      "What challenges does the child face? Sensory sensitivities, etc.",
+  },
+  {
+    id: "familyContext",
+    label: "Family Context",
+    key: "familyContext",
+    placeholder:
+      "Relevant family information, siblings, home environment, etc.",
+  },
+  {
+    id: "preferredActivities",
+    label: "Preferred Activities for Engagement",
+    key: "preferredActivities",
+    placeholder: "Activities that help engage this child during sessions",
+  },
+  {
+    id: "sensoryProcessing",
+    label: "Sensory Processing",
+    key: "sensoryProcessing",
+    placeholder:
+      "Sensory preferences, sensitivities, seeking behaviors, regulation strategies",
+  },
+  {
+    id: "communication",
+    label: "Communication",
+    key: "communication",
+    placeholder:
+      "Current communication level, expressive/receptive language, AAC use, communication style",
+  },
+  {
+    id: "safetyConsiderations",
+    label: "Safety Considerations",
+    key: "safetyConsiderations",
+    placeholder:
+      "Document any safety concerns, allergies, elopement risks, medical needs, behavioral safety considerations, environmental modifications needed, etc.",
+  },
+];

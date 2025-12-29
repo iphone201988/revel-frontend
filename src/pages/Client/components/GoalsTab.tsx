@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, {  useEffect, useState } from "react";
 import { Badge } from "../../../components/Badge";
 import { Button } from "../../../components/Button";
 import { Card } from "../../../components/Card";
@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "../../../components/Select";
 import { Textarea } from "../../../components/Textarea";
-import { Target, Plus, Calendar, Edit } from "lucide-react";
+import { Target, Plus, Calendar, Edit, TrendingUp } from "lucide-react";
 import { toast } from "react-toastify";
 import type { Goal } from "./types";
 import { useNavigate } from "react-router-dom";
@@ -34,6 +34,7 @@ import moment from "moment";
 import { SupportLevel } from "../../../utils/enums/enum";
 import { SelectBox } from "../../../components/SelectBox";
 import { GoalBankCategory } from "../../../Constant";
+import { showSuccess } from "../../../components/CustomToast";
 
 interface GoalsSectionProps {
   clientId: string;
@@ -43,9 +44,9 @@ interface GoalsSectionProps {
 export function GoalsSection({ clientId, clientGoals }: GoalsSectionProps) {
   const { data: goals } = useGetGoalsQuery();
 
-  const [addItpGoalToClient] = useAddItpGoalToClientMutation();
+  const [addItpGoalToClient, {isSuccess: addGoalSuccess}] = useAddItpGoalToClientMutation();
 
-  const [updateItpGoal] = useUpdateItpGoalMutation(); //done
+  const [updateItpGoal, {isSuccess : isUpdated}] = useUpdateItpGoalMutation(); //done
 
   const navigate = useNavigate();
   const [isAddingGoalFromBank, setIsAddingGoalFromBank] = useState(false);
@@ -101,7 +102,7 @@ export function GoalsSection({ clientId, clientGoals }: GoalsSectionProps) {
         .unwrap()
         .catch((error) => handleError(error));
 
-      toast.success("Goal assigned to client");
+      showSuccess("Goal assigned to client");
 
       setIsAddingGoalFromBank(false);
       setSelectedBankGoal(null);
@@ -226,10 +227,23 @@ export function GoalsSection({ clientId, clientGoals }: GoalsSectionProps) {
 
   const handleModifyCriteria = (e: React.FormEvent) => {
     e.preventDefault();
-    // toast.success("Goal criteria updated successfully");
+    
     setIsModifyingCriteria(false);
     setModifyingGoalId(null);
   }; // done
+
+  useEffect(()=>{
+    if (addGoalSuccess) {
+      showSuccess("Goal is added to the client")
+    }
+  },[addGoalSuccess])
+
+  useEffect(()=>{
+    if (isUpdated) {
+      showSuccess("Client Goal updated successfully...")
+    }
+  })
+
 
   return (
     <Card className="p-6 bg-white">
@@ -241,7 +255,7 @@ export function GoalsSection({ clientId, clientGoals }: GoalsSectionProps) {
             variant="outline"
             className="border-[#395159] text-[#395159]"
           >
-            <Target className="w-4 h-4 mr-2" />
+            <TrendingUp className="w-4 h-4 mr-2" />
             Review & Update Goals
           </Button>
           <Dialog

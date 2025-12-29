@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { AlertTriangle, Bell } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '../../../components/Alert';
 import { Badge } from '../../../components/Badge';
@@ -19,8 +19,8 @@ export function ReviewAlertBanner({ alerts, onClientClick }: ReviewAlertBannerPr
   if (alerts.length === 0) return null;
 
   // Separate urgent (30 days or less) and upcoming (60 days or less) alerts
-  const urgentAlerts = alerts.filter(a => a.daysUntilReview <= 5);
-  const upcomingAlerts = alerts.filter(a => a.daysUntilReview > 10 && a.daysUntilReview <= 15);
+  const urgentAlerts = alerts.filter(a => a.daysUntilReview <=5);
+  const upcomingAlerts = alerts.filter(a => a.daysUntilReview > 5 && a.daysUntilReview <= 20);
 
   return (
     <div className="space-y-3 mb-6">

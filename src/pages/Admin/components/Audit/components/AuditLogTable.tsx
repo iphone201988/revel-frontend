@@ -1,5 +1,5 @@
 // components/AuditLogTable.tsx
-import React, { useState } from "react";
+import React from "react";
 import { Badge } from "../../../../../components/Badge";
 import { Button } from "../../../../../components/Button";
 import { Card } from "../../../../../components/Card";
@@ -12,15 +12,6 @@ import {
   TableRow,
 } from "../../../../../components//Table";
 import moment from "moment";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogTrigger,
-} from "../../../../../components/Dailog";
-import { Label } from "../../../../../components/Label";
 import { AuditLogTableHeaders } from "../../../../../Constant";
 
 type AuditLog = {
@@ -59,7 +50,7 @@ export function AuditLogTable({
   formatDate,
   getActionBadge,
   getResourceIcon,
-  onSelectLog = () => {},
+  
 }: Props) {
 
 

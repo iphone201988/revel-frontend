@@ -82,9 +82,9 @@ export interface SessionData {
 }
 
 export interface HistorySectionProps {
-  sessions: SessionData[] | any; // Allow any for now to handle API response
+  sessions: SessionData[] | any;
   canEditSignedNotes: boolean;
   currentUser: any;
   canViewAllSessions?: boolean;
-  canviewAllSessions?: boolean; // Support both casings for backward compatibility
+  canviewAllSessions?: boolean;
 }

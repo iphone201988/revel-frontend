@@ -20,7 +20,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "../../../../components/Tabs";
-import { toast } from "react-toastify";
+
 import { AuditLogTable } from "./components/AuditLogTable";
 // import { AuditStats as AuditStatsSection } from './components/AuditStats';
 // import { AuditLog, type AuditStats } from './components/mockData';
@@ -28,14 +28,18 @@ import { AuditStatsSection } from "./components/AuditStats";
 import AuditFilters from "./components/AuditFilters";
 import { useNavigate } from "react-router-dom";
 import {
+  useDownloadAuditlogsMutation,
   useViewAuditsQuery,
   useViewStatsQuery,
 } from "../../../../redux/api/provider";
+import { handleError } from "../../../../utils/helper";
 
 export function AuditLogScreen() {
   const navigate = useNavigate();
 
   const [page, setPage] = useState(1);
+  console.log(page);
+  
 
   const [search, setSearch] = useState("");
   const [actionFilter, setActionFilter] = useState("");
@@ -73,21 +77,38 @@ useEffect(() => {
     setPage(1);
   };
 
-  const handleExport = () => {
+  const[downloadAuditlogs] = useDownloadAuditlogsMutation()
+  const handleExport = async() => {
     // In production, implement CSV export
-    toast.success("Exporting audit logs to CSV...");
+     try {
+    const blob = await downloadAuditlogs().unwrap().catch((error)=>handleError(error));
+
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = "audit-logs.csv"; // 👈 filename
+    document.body.appendChild(link);
+    link.click();
+
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  }catch(error){
+    handleError(error)
+  }
+
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  // const formatDate = (dateString: string) => {
+  //   const date = new Date(dateString);
+  //   return date.toLocaleString("en-US", {
+  //     year: "numeric",
+  //     month: "short",
+  //     day: "numeric",
+  //     hour: "2-digit",
+  //     minute: "2-digit",
+  //   });
+  // };
 
   const getActionBadge = (action: string) => {
     const actionMap: Record<string, { label: string; color: string }> = {
@@ -101,7 +122,7 @@ useEffect(() => {
       create_session: { label: "Create Session", color: "bg-emerald-500" },
       update_session: { label: "Update Session", color: "bg-yellow-500" },
       sign_qsp: { label: "QSP Signature", color: "bg-purple-500" },
-      export_pdf: { label: "Export PDF", color: "bg-orange-500" },
+      export_pdf: { label: "Export", color: "bg-orange-500" },
       create_provider: { label: "Create Provider", color: "bg-emerald-500" },
       update_provider: { label: "Update Provider", color: "bg-yellow-500" },
       view_audit_logs: { label: "View Statistics", color: "bg-indigo-500" },
@@ -132,6 +153,7 @@ useEffect(() => {
       Provider: <User className="w-4 h-4" />,
       Goal: <Goal className="w-4 h-4" />,
       Audit_Logs: <Activity className="w-4 h-4" />,
+      Export: <Download className="w-4 h-4" />,
     };
 
     return iconMap[resource] || <FileText className="w-4 h-4" />;
@@ -170,7 +192,7 @@ useEffect(() => {
               Refresh
             </Button> */}
             <Button
-              //   onClick={handleExport}
+                onClick={handleExport}
               className="bg-[#395159] hover:bg-[#303630] text-white"
             >
               <Download className="w-4 h-4 mr-2" />

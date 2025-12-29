@@ -6,14 +6,15 @@ import { Label } from "../../../components/Label";
 import { Lock, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useProviderLoginMutation } from "../../../redux/api/provider";
-import { toast } from "react-toastify";
 import { handleError } from "../../../utils/helper";
+import { showSuccess } from "../../../components/CustomToast";
 // import logo from "figma:asset/7dfbdfbff0b23ecbbf097ad313f5fd32c091c7f7.png";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
-  const [providerLogin, { data , isLoading, isSuccess}] = useProviderLoginMutation();
+  const [providerLogin, { data, isLoading, isSuccess }] =
+    useProviderLoginMutation();
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     const values = {
@@ -28,10 +29,12 @@ const Login = () => {
 
   useEffect(() => {
     if (isSuccess) {
-      toast.success("Please verify Otp");
-      navigate("/verify", {state:{ Email: email}});
+      showSuccess("Login successful! Sending 2FA code to your email...");
+      navigate("/verify", { state: { Email: email } });
     }
   }, [data]);
+  const isFormValid = email.trim() !== "" && password.trim() !== "";
+
   return (
     <>
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#395159] to-[#303630] p-8">
@@ -80,9 +83,15 @@ const Login = () => {
 
             <Button
               type="submit"
-              className="w-full h-12 bg-[#395159] hover:bg-[#303630] text-white"
+              className={`w-full h-12 text-white transition
+    ${
+      isFormValid
+        ? "bg-[#395159] hover:bg-[#303630]"
+        : "bg-gray-400 cursor-not-allowed"
+    }
+  `}
             >
-            {isLoading ?"Processing..." : "Sign in"}
+              {isLoading ? "Processing..." : "Sign in"}
             </Button>
           </form>
 

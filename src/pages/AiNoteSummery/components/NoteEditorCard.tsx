@@ -15,82 +15,209 @@ import {
   Download,
 } from "lucide-react";
 import { toast } from "react-toastify";
+import { useLocation, useNavigate } from "react-router-dom";
+import {
+  useDownloadSessionNotesMutation,
+  useGenerateNotesMutation,
+  useGetUserProfileQuery,
+} from "../../../redux/api/provider";
+import { useEffect, useState } from "react";
 import moment from "moment";
+import { handleDownloadFunction, handleError } from "../../../utils/helper";
+import { FullScreenLoader } from "./Loader";
+import { showSuccess } from "../../../components/CustomToast";
 
-interface NoteEditorCardProps {
-  isEditing: boolean;
-  isSigned: boolean;
-  hasEdited: boolean;
-  sessionOverview: string;
-  treatmentChanges: string;
-  clinicalRecommendations: string;
-  signature: string;
-  finalizedTimestamp: string;
-  sessionData: any;
-  clinicAccount: any;
-  currentUser: any;
-  allGoals: any[];
-  removedGoalIds: number[];
-  onEditNote: () => void;
-  onSaveEdits: () => void;
-  onSignNote: () => void;
-  onDownloadPDF: () => void;
-  setSessionOverview: (val: string) => void;
-  setTreatmentChanges: (val: string) => void;
-  setClinicalRecommendations: (val: string) => void;
-  aiNoteData: any;
-  setSignature: (val: string) => void;
-}
+export function NoteEditorCard({ onGenerate }: any) {
+  const [hasEdited, setHasEdited] = useState(true);
+  const [isSigned, setIsSigned] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [sessionOverview, setSessionOverview] = useState("");
+  const [treatmentChanges, setTreatmentChanges] = useState("");
+  const [clinicalRecommendations, setClinicalRecommendations] = useState("");
+  const [clientVariables, setClientVariables] = useState("");
+  const [signatureError, setSignatureError] = useState("");
 
-export function NoteEditorCard({
-  isEditing,
-  isSigned,
-  hasEdited,
-  sessionOverview,
-  treatmentChanges,
-  clinicalRecommendations,
-  signature,
-  finalizedTimestamp,
-  sessionData,
-  clinicAccount,
-  currentUser,
-  allGoals,
-  removedGoalIds,
-  onEditNote,
-  onSaveEdits,
-  onSignNote,
-  onDownloadPDF,
-  setSessionOverview,
-  setTreatmentChanges,
-  setClinicalRecommendations,
-  aiNoteData,
-  setSignature,
-}: NoteEditorCardProps) {
-  // Extract AI response data (for clinical content only)
-  const aiResponse = aiNoteData?.aiResponse || {};
-  const clinicalNote = aiResponse.clinicalNote || {};
-  const sessionDetails = aiResponse.sessionDetails || {};
+  const [providerObservation, setProviderObservations] = useState("");
 
-  // Format date helper
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      month: "2-digit",
-      day: "2-digit",
-      year: "numeric",
-    });
+  const [signature, setSignature] = useState("");
+
+  const onEditNote = () => {
+    setIsEditing(true);
+    setHasEdited(false);
   };
 
-  // Format time helper
-  const formatTime = (dateString: string) => {
-    if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    return date.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
+  const onSaveEdits = () => {
+    setHasEdited(true);
+    setIsEditing(false);
+  };
+  const onSignNote = () => {
+    if (!signature.trim()) {
+      setSignatureError("Signature is required.");
+      return;
+    }
+    setIsSigned(true);
+    setIsEditing(false);
+  };
+
+  const { data: currentUser } = useGetUserProfileQuery();
+
+  const location = useLocation();
+  const collectedSessionData = location?.state?.sessionData;
+
+  console.log(collectedSessionData, "collected session data");
+
+  const navigate = useNavigate();
+
+  const [generateNotes, { data: notes, isSuccess, isLoading }] =
+    useGenerateNotesMutation();
+
+  const [downloadSessionNotes, { isLoading: isDownloading }] =
+    useDownloadSessionNotesMutation();
+  console.log(notes?.data, " ai reponse ");
+
+  const aiData = notes?.data?.soapNote;
+
+  const sessionData = collectedSessionData?.sessionData;
+
+  const sessionId = collectedSessionData?.collectedData?.sessionId;
+
+  useEffect(() => {
+    if (onGenerate) {
+      generateNotes(sessionId)
+        .unwrap()
+        .catch((error: any) => handleError(error));
+    }
+  }, [onGenerate]);
+
+  useEffect(() => {
+    if (isSuccess) {
+      setSessionOverview(aiData?.soap_note?.objective?.session_context);
+      setClientVariables(sessionData.clientVariables);
+      setTreatmentChanges(aiData?.soap_note?.assessment);
+      setClinicalRecommendations(aiData?.soap_note?.plan);
+      setProviderObservations(aiData?.soap_note?.objective?.observations);
+    }
+  }, [isSuccess]);
+
+  const getSupportLevel = (performance: any) => {
+    const indie = performance.independent?.count || 0;
+    const minimal = performance.minimal_support?.count || 0;
+    const moderate = performance.moderate_support?.count || 0;
+
+    const max = Math.max(indie, minimal, moderate);
+    if (max === indie) return "Independent";
+    if (max === minimal) return "Minimal Support";
+    return "Moderate Support";
+  };
+
+  function calculateSupportStats(supportLevels: {
+    independent?: { count?: number; success?: number; miss?: number };
+    minimal?: { count?: number; success?: number; miss?: number };
+    modrate?: { count?: number; success?: number; miss?: number };
+  }) {
+    const independent = supportLevels.independent || {};
+    const minimal = supportLevels.minimal || {};
+    const moderate = supportLevels.modrate || {}; // typo handled
+
+    // Totals
+    const totalSuccess =
+      (independent.success || 0) +
+      (minimal.success || 0) +
+      (moderate.success || 0);
+
+    const totalMiss =
+      (independent.miss || 0) + (minimal.miss || 0) + (moderate.miss || 0);
+
+    const totalTrials = totalSuccess + totalMiss;
+
+    return {
+      totalSuccess,
+      totalTrials,
+      totalMiss,
+    };
+  }
+  if (isLoading) {
+    return (
+      <>
+        {isLoading && (
+          <FullScreenLoader text="AI is generating the clinical note..." />
+        )}
+      </>
+    );
+  }
+
+  const onDownloadPDF = async (fileName: string) => {
+    try {
+      const payload = buildPdfPayload();
+      const blob = await downloadSessionNotes({
+        sessionData: payload,
+      })
+        .unwrap()
+        .catch((error) => handleError(error));
+
+      await handleDownloadFunction(blob, fileName);
+    } catch (err) {
+      toast.error("Failed to generate PDF");
+    }
+  };
+
+  const buildPdfPayload = () => {
+    return {
+      client: {
+        name: sessionData?.client?.name,
+        dob: moment(sessionData?.client?.dob).format("DD-MM-YYYY"),
+      },
+
+      provider: {
+        name: currentUser?.data?.name,
+        credential: currentUser?.data?.credential,
+      },
+
+      session: {
+        dateOfSession: moment(sessionData?.dateOfSession).format("DD-MM-YYYY"),
+        documentationDate: moment(new Date()).format("DD-MM-YYYY"),
+        startTime: moment(sessionData?.startTime).format("hh:mm A"),
+        endTime: moment(sessionData?.endTime).format("hh:mm A"),
+        durationMinutes: Math.floor(
+          (collectedSessionData?.collectedData?.duration || 0) / 60
+        ),
+        attendees: sessionData?.present || "Client Only",
+      },
+
+      clinicalNote: {
+        sessionOverview,
+        providerObservation,
+        clientVariables,
+        treatmentChanges,
+        clinicalRecommendations,
+      },
+
+      fedcObserved:
+        aiData?.soap_note?.objective?.data_and_progress?.goals?.map(
+          (g: any) => g?.fedc_level
+        ) || [],
+
+      goals: (
+        collectedSessionData?.collectedData?.goals_dataCollection || []
+      ).map((goal: any) => {
+        const stats = calculateSupportStats(goal?.supportLevel || {});
+        return {
+          fedcCategory: goal?.fedc_category,
+          accuracy: goal?.totals?.overall_accuracy_percent || goal?.accuracy,
+          totalTrials: goal?.totals?.total_trials || goal?.total,
+          supportLevel: goal?.performance
+            ? getSupportLevel(goal?.performance)
+            : getSupportLevel(goal?.supportLevel),
+          success: stats.totalSuccess,
+          miss: stats.totalMiss,
+        };
+      }),
+
+      signature: {
+        signedBy: signature || currentUser?.data?.name,
+        signedAt: moment(new Date()).format("DD-MM-YYYY"),
+      },
+    };
   };
 
   return (
@@ -157,12 +284,10 @@ export function NoteEditorCard({
             : "border-[#ccc9c0] bg-[#efefef]"
         }`}
       >
-        {/* Document Header - Using collectedSessionData */}
+        {/* Document Header */}
         <div className="bg-white p-6 rounded-lg border border-[#ccc9c0]">
           <div className="text-center border-b border-[#ccc9c0] pb-4 mb-4">
-            <h2 className="text-[#303630] text-2xl mb-2">
-              {clinicAccount?.clinicName || "DIR DataFlow"}
-            </h2>
+            <h2 className="text-[#303630] text-2xl mb-2">DIR DataFlow</h2>
             <p className="text-[#395159]">Session Note</p>
             <p className="text-sm text-[#395159] mt-1">
               Treatment Plan Development and Progress Monitoring
@@ -173,41 +298,25 @@ export function NoteEditorCard({
             <div>
               <Label className="text-xs text-[#395159]">Person's Name</Label>
               <p className="text-[#303630]">
-                {sessionData?.clientName || "Client"}
+                {sessionData?.client?.name || "Client"}
               </p>
             </div>
             <div>
               <Label className="text-xs text-[#395159]">Date of Birth</Label>
               <p className="text-[#303630]">
-                {formatDate(sessionData?.clientDob)}
-              </p>
-            </div>
-            <div>
-              <Label className="text-xs text-[#395159]">Age</Label>
-              <p className="text-[#303630]">
-                {sessionData?.clientAge || "N/A"}
-              </p>
-            </div>
-            <div>
-              <Label className="text-xs text-[#395159]">Diagnosis</Label>
-              <p className="text-[#303630]">
-                {sessionData?.diagnosis || "N/A"}
+                {moment(sessionData?.client?.dob).format("DD-MM-YYYY") || "N/A"}
               </p>
             </div>
             <div>
               <Label className="text-xs text-[#395159]">Provider Name</Label>
               <p className="text-[#303630]">
-                {sessionData?.providerName ||
-                  currentUser?.name ||
-                  "Provider Name"}
+                {currentUser?.data?.name || "Provider Name"}
               </p>
             </div>
             <div>
               <Label className="text-xs text-[#395159]">Credential/Title</Label>
               <p className="text-[#303630]">
-                {sessionData?.providerCredential ||
-                  currentUser?.credential ||
-                  "Credential"}
+                {currentUser?.data?.credential || "Credential"}
               </p>
             </div>
             <div>
@@ -215,37 +324,35 @@ export function NoteEditorCard({
                 Date Service Provided
               </Label>
               <p className="text-[#303630]">
-                {formatDate(sessionData?.dateOfSession)}
+                {moment(sessionData?.dateOfSession).format("DD-MM-YYYY") ||
+                  new Date().toLocaleDateString()}
               </p>
             </div>
             <div>
               <Label className="text-xs text-[#395159]">
                 Documentation Date
               </Label>
-              <p className="text-[#303630]">
-                {formatDate(
-                  sessionData?.documentationDate || new Date().toISOString()
-                )}
-              </p>
+              <p className="text-[#303630]">{moment().format("DD-MM-YYYY")}</p>
             </div>
             <div>
               <Label className="text-xs text-[#395159]">
                 Session Start Time
               </Label>
               <p className="text-[#303630]">
-                {moment(sessionData?.startTime).format("HH:mm") || "N/A"}
+                {moment(sessionData?.startTime).format("hh:mm A") || "N/A"}
               </p>
             </div>
             <div>
               <Label className="text-xs text-[#395159]">Session End Time</Label>
               <p className="text-[#303630]">
-                {moment(sessionData?.endTime).format("HH:mm") || "N/A"}
+                {" "}
+                {moment(sessionData?.endTime).format("hh:mm A") || "N/A"}
               </p>
             </div>
           </div>
         </div>
 
-        {/* Session Details Section - Using collectedSessionData */}
+        {/* Session Details Section */}
         <div className="bg-white p-6 rounded-lg border border-[#ccc9c0]">
           <h3 className="text-[#303630] mb-3 flex items-center gap-2">
             <FileText className="w-5 h-5 text-[#395159]" />
@@ -255,361 +362,265 @@ export function NoteEditorCard({
 
           <div className="space-y-3">
             <div>
-              <Label className="text-xs text-[#395159]">Total Duration</Label>
+              <Label className="text-sm text-[#395159]">Total Duration</Label>
               <p className="text-[#303630]">
-                {sessionData?.duration
-                  ? Math.round(sessionData.duration / 60)
-                  : "N/A"}{" "}
+                {Math.floor(
+                  (collectedSessionData?.collectedData?.duration || 0) / 60
+                )}{" "}
                 minutes
               </p>
             </div>
-            <div>
-              <Label className="text-sm text-[#395159]">
-                Activities Engaged
-              </Label>
-              <div className="flex flex-wrap gap-2 mt-1">
-                {(sessionData?.activityEngaged || []).length > 0 ? (
-                  sessionData.activityEngaged.map(
-                    (activity: string, idx: number) => (
-                      <Badge
-                        key={idx}
-                        variant="outline"
-                        className="border-[#395159] text-[#395159]"
-                      >
-                        {activity}
-                      </Badge>
-                    )
-                  )
-                ) : (
-                  <Badge
-                    variant="outline"
-                    className="border-[#395159] text-[#395159]"
-                  >
-                    No activities recorded
-                  </Badge>
-                )}
-              </div>
-            </div>
 
             <div>
               <Label className="text-sm text-[#395159]">
-                Supports Observed
-              </Label>
-              <div className="flex flex-wrap gap-2 mt-1">
-                {(sessionData?.supportsObserved || []).length > 0 ? (
-                  sessionData.supportsObserved.map(
-                    (support: string, idx: number) => (
-                      <Badge
-                        key={idx}
-                        variant="outline"
-                        className="border-[#395159] text-[#395159]"
-                      >
-                        {support}
-                      </Badge>
-                    )
-                  )
-                ) : (
-                  <Badge
-                    variant="outline"
-                    className="border-[#395159] text-[#395159]"
-                  >
-                    No supports recorded
-                  </Badge>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <Label className="text-xs text-[#395159]">
                 Attendees Present
               </Label>
-              <p className="text-[#303630]">
-                <Badge
-                  variant="outline"
-                  className="border-[#395159] text-[#395159]"
-                >
-                  {sessionData?.attendees || "Client Only"}
-                </Badge>
-              </p>
-            </div>
-            {sessionData?.variables && (
-              <div>
-                <Label className="text-xs text-[#395159]">
-                  Client Variables and Presentation
-                </Label>
-                <p className="text-[#303630]">{sessionData?.variables}</p>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {sessionData?.present && (
+                  <Badge
+                    variant="outline"
+                    className="border-[#395159] text-[#395159]"
+                  >
+                    {sessionData?.present}
+                  </Badge>
+                )}
+
+                {!sessionData?.present && (
+                  <Badge
+                    variant="outline"
+                    className="border-[#395159] text-[#395159]"
+                  >
+                    Client Only
+                  </Badge>
+                )}
               </div>
-            )}
-          
-            {sessionData?.providerObservation && (
+            </div>
+
+            {isEditing ? (
               <div>
                 <Label className="text-sm text-[#395159]">
-                  Provider Observations
+                  Client Variables and Presentation
+                </Label>
+                <Textarea
+                  value={clientVariables}
+                  onChange={(e) => {
+                    setClientVariables(e.target.value);
+                  }}
+                  className="mt-1"
+                  rows={2}
+                />
+              </div>
+            ) : (
+              <div>
+                <Label className="text-sm text-[#395159]">
+                  Client Variables and Presentation
                 </Label>
                 <p className="text-[#303630] text-sm">
-                  {sessionData.providerObservation}
+                  {clientVariables ||
+                    "No specific variables or concerns noted for this session. Client presented as alert and ready to engage."}
                 </p>
               </div>
             )}
           </div>
         </div>
 
-        {/* Clinical Note - Presentation and Engagement (AI Generated) */}
+        {/* Progress Summary Section */}
         <div className="bg-white p-6 rounded-lg border border-[#ccc9c0]">
           <h3 className="text-[#303630] mb-3 flex items-center gap-2">
             <CheckCircle2 className="w-5 h-5 text-[#395159]" />
             Summary of Progress and Response to Treatment
           </h3>
           <Separator className="mb-4 bg-[#ccc9c0]" />
-             <Label className="text-sm text-[#395159]">
-                  Session Overview
-                </Label>
+
           <div className="space-y-4">
-            {isEditing ? (
-              <Textarea
-                value={sessionOverview}
-                onChange={(e) => setSessionOverview(e.target.value)}
-                className="mt-1"
-                rows={4}
-                placeholder="Describe the client's presentation and engagement..."
-              />
-            ) : (
-              <p className="text-[#303630] text-sm leading-relaxed">
-                {sessionOverview ||
-                  clinicalNote.presentationAndEngagement ||
-                  "No overview available."}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Interactions and Affect (AI Generated) */}
-        {clinicalNote.interactionsAndAffect && (
-          <div className="bg-white p-6 rounded-lg border border-[#ccc9c0]">
-            <h3 className="text-[#303630] mb-3">Interactions and Affect</h3>
-            <Separator className="mb-4 bg-[#ccc9c0]" />
-            <p className="text-[#303630] text-sm leading-relaxed">
-              {clinicalNote.interactionsAndAffect}
-            </p>
-          </div>
-        )}
-
-        {/* FEDC Observations (AI Generated) */}
-        <div className="bg-white p-6 rounded-lg border border-[#ccc9c0]">
-          <h3 className="text-[#303630] mb-3">FEDC Level Observations</h3>
-          <Separator className="mb-4 bg-[#ccc9c0]" />
-
-          <div className="space-y-3">
             <div>
               <Label className="text-sm text-[#395159] mb-2 block">
-                Observed FEDC Level
+                Session Overview
               </Label>
-              <Badge className="bg-[#395159] text-white">
-                {sessionDetails?.observedFEDCLevel || "FEDC Level Observed"}
-              </Badge>
+              {isEditing ? (
+                <Textarea
+                  value={sessionOverview}
+                  onChange={(e) => {
+                    setSessionOverview(e.target.value);
+                  }}
+                  className="mt-1"
+                  rows={4}
+                  placeholder="Describe the session overview..."
+                />
+              ) : (
+                <p className="text-[#303630] text-sm leading-relaxed">
+                  {sessionOverview || ""}
+                </p>
+              )}
+            </div>
+            <div>
+              <Label className="text-sm text-[#395159] mb-2 block">
+                Provider Observation
+              </Label>
+              {isEditing ? (
+                <Textarea
+                  value={providerObservation}
+                  onChange={(e) => {
+                    setProviderObservations(e.target.value);
+                  }}
+                  className="mt-1"
+                  rows={5}
+                  placeholder="Describe the detailedd observation..."
+                />
+              ) : (
+                <p className="text-[#303630] text-sm leading-relaxed">
+                  {providerObservation || ""}
+                </p>
+              )}
             </div>
 
-            {clinicalNote?.fedcObservations && (
-              <div>
-                <Label className="text-sm text-[#395159] mb-2 block">
-                  Clinical Observations
-                </Label>
-                <p className="text-[#303630] text-sm leading-relaxed">
-                  {clinicalNote.fedcObservations}
-                </p>
+            <div>
+              <Label className="text-sm text-[#395159] mb-2 block">
+                FEDC Observed During Session
+              </Label>
+              <div className="flex flex-wrap gap-2">
+                {aiData ? (
+                  (aiData?.soap_note?.objective?.data_and_progress?.goals || [])
+                    .length > 0 ? (
+                    (
+                      aiData?.soap_note?.objective?.data_and_progress?.goals ||
+                      []
+                    ).map((fedc: any) => (
+                      <Badge key={fedc} className="bg-[#395159] text-white">
+                        {fedc?.fedc_level}
+                      </Badge>
+                    ))
+                  ) : (
+                    <p className="text-[#303630] text-sm">
+                      Multiple FEDC levels observed and addressed during session
+                    </p>
+                  )
+                ) : (
+                  <p className="text-[#303630] text-sm">
+                    {
+                      collectedSessionData?.collectedData?.goals_dataCollection
+                        .length
+                    }{" "}
+                    FEDC levels observed and addressed during session
+                  </p>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
 
-        {/* ITP Goal Progress - Using collectedSessionData goals */}
-        {(sessionData?.goalsDataCollection || []).map(
-          (goalDataCollection: any, index: number) => {
-            const aiGoal = clinicalNote.goalProgress?.[index] || {};
-
-            // Calculate accuracy from collected data
-            const accuracy = goalDataCollection.accuracy || 0;
-            const total = goalDataCollection.total || 0;
-
-            return (
-              <div
-                key={index}
-                className="bg-white p-6 rounded-lg border border-[#ccc9c0]"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <h4 className="text-[#303630]">ITP Goal {index + 1}</h4>
-                  <Badge
-                    className={`${
-                      accuracy >= 80
-                        ? "bg-green-600"
-                        : accuracy >= 60
-                        ? "bg-yellow-600"
-                        : "bg-orange-600"
-                    } text-white`}
+        {/* ITP Goal Progress */}
+        {false
+          ? aiData?.soap_note?.objective?.data_and_progress?.goals
+          : collectedSessionData?.collectedData?.goals_dataCollection?.map(
+              (goal: any, index: number) => {
+                return (
+                  <div
+                    key={index}
+                    className="bg-white p-6 rounded-lg border border-[#ccc9c0]"
                   >
-                    {accuracy}% Accuracy
-                  </Badge>
-                </div>
-                <Separator className="mb-4 bg-[#ccc9c0]" />
-
-                <div className="space-y-3">
-                  <div>
-                    <Label className="text-sm text-[#395159]">
-                      Goal Description
-                    </Label>
-                    <p className="text-[#303630]">
-                      {aiGoal?.goalName ||
-                        goalDataCollection?.goalId?.category ||
-                        "Goal"}
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-sm text-[#395159]">
-                        Performance
-                      </Label>
-                      <p className="text-[#303630]">
-                        {accuracy}% accuracy across {total} trials
-                      </p>
+                    <div className="flex items-start justify-between mb-3">
+                      <h4 className="text-[#303630]">ITP Goal {index + 1}</h4>
+                      <Badge
+                        className={`${
+                          goal?.totals?.overall_accuracy_percent ||
+                          goal?.accuracy >= 80
+                            ? "bg-green-600"
+                            : goal?.totals?.overall_accuracy_percent ||
+                              goal?.accuracy >= 60
+                            ? "bg-yellow-600"
+                            : "bg-orange-600"
+                        } text-white`}
+                      >
+                        {goal?.totals?.overall_accuracy_percent ||
+                          goal?.accuracy}
+                        % Accuracy
+                      </Badge>
                     </div>
-                    <div>
-                      <Label className="text-sm text-[#395159]">
-                        Total Opportunities
-                      </Label>
-                      <p className="text-[#303630]">{total}</p>
-                    </div>
-                  </div>
+                    <Separator className="mb-4 bg-[#ccc9c0]" />
 
-                  {/* Support Level Breakdown from collected data */}
-                  <div>
-                    <Label className="text-sm text-[#395159] mb-2 block">
-                      Support Level Breakdown
-                    </Label>
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="p-2 bg-[#efefef] rounded border border-[#ccc9c0]">
-                        <Label className="text-xs text-[#395159]">
-                          Independent
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="text-sm text-[#395159]">
+                          Goal Description
                         </Label>
-                        <p className="text-[#303630] font-semibold">
-                          {goalDataCollection.supportLevel?.independent
-                            ?.count || 0}
-                        </p>
-                        <p className="text-xs text-[#395159]">
-                          Success:{" "}
-                          {goalDataCollection.supportLevel?.independent
-                            ?.success || 0}
-                        </p>
+                        <p className="text-[#303630]">{goal?.fedc_category}</p>
                       </div>
-                      <div className="p-2 bg-[#efefef] rounded border border-[#ccc9c0]">
-                        <Label className="text-xs text-[#395159]">
-                          Minimal
-                        </Label>
-                        <p className="text-[#303630] font-semibold">
-                          {goalDataCollection.supportLevel?.minimal?.count || 0}
-                        </p>
-                        <p className="text-xs text-[#395159]">
-                          Success:{" "}
-                          {goalDataCollection.supportLevel?.minimal?.success ||
-                            0}
-                        </p>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-sm text-[#395159]">
+                            Performance
+                          </Label>
+                          <p className="text-[#303630]">
+                            {goal?.totals?.overall_accuracy_percent ||
+                              goal?.accuracy}
+                            % accuracy across{" "}
+                            {goal?.totals?.total_trials || goal?.total}{" "}
+                            opportunities
+                          </p>
+                        </div>
+
+                        <div>
+                          <Label className="text-sm text-[#395159]">
+                            Support Level Required
+                          </Label>
+                          <Badge
+                            variant="outline"
+                            className="border-[#395159] text-[#395159]"
+                          >
+                            {goal?.performance
+                              ? getSupportLevel(goal?.performance)
+                              : getSupportLevel(goal?.supportLevel)}
+                          </Badge>
+                        </div>
                       </div>
-                      <div className="p-2 bg-[#efefef] rounded border border-[#ccc9c0]">
-                        <Label className="text-xs text-[#395159]">
-                          Moderate
+
+                      <div>
+                        <Label className="text-sm text-[#395159]">
+                          Opportunities
                         </Label>
-                        <p className="text-[#303630] font-semibold">
-                          {goalDataCollection.supportLevel?.modrate?.count || 0}
-                        </p>
-                        <p className="text-xs text-[#395159]">
-                          Success:{" "}
-                          {goalDataCollection.supportLevel?.modrate?.success ||
-                            0}
+                        <p className="text-sm text-[#303630]">
+                          Successful:{" "}
+                          {goal?.totals?.totalSuccess ||
+                            calculateSupportStats(goal?.supportLevel)
+                              .totalSuccess}{" "}
+                          • Missed:{" "}
+                          {goal?.totals?.total_miss ||
+                            calculateSupportStats(goal?.supportLevel).totalMiss}
                         </p>
                       </div>
                     </div>
                   </div>
+                );
+              }
+            )}
 
-                  {aiGoal.masteryCriteria && (
-                    <div>
-                      <Label className="text-sm text-[#395159]">
-                        Mastery Criteria
-                      </Label>
-                      <p className="text-sm text-[#303630]">
-                        {aiGoal.masteryCriteria}
-                      </p>
-                    </div>
-                  )}
-
-                  {aiGoal.clinicalInterpretation && (
-                    <div>
-                      <Label className="text-sm text-[#395159]">
-                        Clinical Interpretation
-                      </Label>
-                      <p className="text-sm text-[#303630] leading-relaxed">
-                        {aiGoal.clinicalInterpretation}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          }
-        )}
-         
-
-
-          <div className="bg-white p-6 rounded-lg border border-[#ccc9c0]">
-          <h3 className="text-[#303630] mb-3 flex items-center gap-2">
-            <Edit className="w-5 h-5 text-[#395159]" />
-           Detailed Clinical Observations
-          </h3>
-          <Separator className="mb-4 bg-[#ccc9c0]" />
-          {isEditing ? (
-            <Textarea
-              value={treatmentChanges}
-              onChange={(e) => setTreatmentChanges(e.target.value)}
-              rows={4}
-              className="bg-white"
-              placeholder="Document any changes to treatment or diagnosis..."
-            />
-          ) : (
-            <p className="text-[#303630] text-sm whitespace-pre-wrap">
-              {treatmentChanges ||
-                clinicalNote.changesInTreatmentOrDiagnosis ||
-                "No changes to diagnosis at this time. Treatment plan remains appropriate."}
-            </p>
-          )}
-        </div>
-
-
-
-
-        {/* Treatment Changes Section (AI Generated) */}
+        {/* Treatment Changes Section */}
         <div className="bg-white p-6 rounded-lg border border-[#ccc9c0]">
           <h3 className="text-[#303630] mb-3 flex items-center gap-2">
             <Edit className="w-5 h-5 text-[#395159]" />
-           Changes in Treatment or Diagnosis
+            Treatment Changes / Diagnosis
           </h3>
           <Separator className="mb-4 bg-[#ccc9c0]" />
           {isEditing ? (
             <Textarea
               value={treatmentChanges}
-              onChange={(e) => setTreatmentChanges(e.target.value)}
+              onChange={(e) => {
+                setTreatmentChanges(e.target.value);
+              }}
               rows={4}
               className="bg-white"
               placeholder="Document any changes to treatment or diagnosis..."
             />
           ) : (
             <p className="text-[#303630] text-sm whitespace-pre-wrap">
-              {treatmentChanges ||
-                clinicalNote.changesInTreatmentOrDiagnosis ||
-                "No changes to diagnosis at this time. Treatment plan remains appropriate."}
+              {treatmentChanges || ""}
             </p>
           )}
         </div>
 
-        {/* Clinical Recommendations / Plan (AI Generated) */}
+        {/* Clinical Recommendations */}
         <div className="bg-white p-6 rounded-lg border border-[#ccc9c0]">
           <h3 className="text-[#303630] mb-3 flex items-center gap-2">
             <CheckCircle2 className="w-5 h-5 text-[#395159]" />
@@ -619,17 +630,17 @@ export function NoteEditorCard({
           {isEditing ? (
             <Textarea
               value={clinicalRecommendations}
-              onChange={(e) => setClinicalRecommendations(e.target.value)}
+              onChange={(e) => {
+                setClinicalRecommendations(e.target.value);
+              }}
               rows={5}
               className="bg-white"
-              placeholder="Enter recommendations and plan..."
+              placeholder="Enter recommendations (one per line)..."
             />
           ) : (
-            <div className="text-sm text-[#303630] leading-relaxed whitespace-pre-wrap">
-              {clinicalRecommendations ||
-                clinicalNote.plan ||
-                "Plan will be documented here."}
-            </div>
+            <ul className="list-disc list-inside text-sm text-[#303630] space-y-2">
+              {clinicalRecommendations || ""}
+            </ul>
           )}
         </div>
 
@@ -656,9 +667,7 @@ export function NoteEditorCard({
                     Provider Name
                   </Label>
                   <p className="text-[#303630]">
-                    {sessionData?.providerName ||
-                      currentUser?.name ||
-                      "Provider Name"}
+                    {currentUser?.data?.name || "Provider Name"}
                   </p>
                 </div>
                 <div>
@@ -666,9 +675,7 @@ export function NoteEditorCard({
                     Credential/Title
                   </Label>
                   <p className="text-[#303630]">
-                    {sessionData?.providerCredential ||
-                      currentUser?.credential ||
-                      "Credential"}
+                    {currentUser?.data?.credential || "Credential"}
                   </p>
                 </div>
               </div>
@@ -678,10 +685,19 @@ export function NoteEditorCard({
                 <Input
                   id="signature"
                   value={signature}
-                  onChange={(e) => setSignature(e.target.value)}
+                  onChange={(e) => {
+                    setSignature(e.target.value);
+                    if (e.target.value.trim()) {
+                      setSignatureError("");
+                    }
+                  }}
                   placeholder="Type your full name to sign"
-                  className="h-12"
+                  className={`h-12 ${signatureError ? "border-red-500" : ""}`}
                 />
+
+                {signatureError && (
+                  <p className="text-sm text-red-600 mt-1">{signatureError}</p>
+                )}
               </div>
 
               <div className="flex gap-3">
@@ -691,14 +707,16 @@ export function NoteEditorCard({
                 >
                   Sign Note
                 </Button>
-                <Button
-                  onClick={onDownloadPDF}
-                  variant="outline"
-                  className="flex-1 h-12 border-[#395159] text-[#395159]"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Download PDF
-                </Button>
+                {isSigned && (
+                  <Button
+                    onClick={() => onDownloadPDF("Session Note")}
+                    variant="outline"
+                    className="flex-1 h-12 border-[#395159] text-[#395159]"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download PDF
+                  </Button>
+                )}
               </div>
             </div>
           ) : (
@@ -706,26 +724,27 @@ export function NoteEditorCard({
               <p className="text-sm text-green-800 flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4" />
                 Signed electronically by{" "}
-                {signature ||
-                  sessionData?.providerName ||
-                  currentUser?.name ||
-                  "Provider"}{" "}
-                on {finalizedTimestamp}
+                {signature || currentUser?.data?.name || "Provider"} on{" "}
+                {moment().date()}
               </p>
               <p className="text-xs text-[#395159] mt-2">
                 If you need to edit and re-sign, please request QSP approval.
               </p>
               <div className="flex gap-3 mt-4">
+                {isSigned && (
+                  <Button
+                    onClick={() => onDownloadPDF("Session Note")}
+                    variant="outline"
+                    className="flex-1 h-12 border-[#395159] text-[#395159]"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    {isDownloading ? "Downloading..." : "Download PDF"}
+                  </Button>
+                )}
                 <Button
-                  onClick={onDownloadPDF}
-                  variant="outline"
-                  className="flex-1 h-12 border-[#395159] text-[#395159]"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Download PDF
-                </Button>
-                <Button
-                  onClick={() => toast.success("Sent to QSP for review")}
+                  onClick={() => {
+                   showSuccess("Sent to QSP for review"), navigate("/");
+                  }}
                   className="flex-1 h-12 bg-[#395159] hover:bg-[#303630] text-white"
                 >
                   Send to QSP for Review

@@ -1,17 +1,13 @@
 
-import { Shield, User, ChevronRight, ArrowLeft } from 'lucide-react';
+import { Shield, User, ChevronRight } from 'lucide-react';
 import { Button } from '../../../../components/Button';
 import { Card } from '../../../../components/Card';
 import { Badge } from '../../../../components/Badge';
-import type { Provider } from '../../types/types';
 import { useNavigate } from 'react-router-dom';
 import { useGetProvidersQuery } from '../../../../redux/api/provider';
 // import type { Screen } from '../../types/navigation';
 
-interface PermissionsManagementProps {
-  onNavigate: (screen: Screen, id?: string) => void;
-  providers?: Provider[];
-}
+
 
 export function PermissionsManagement() {
     const { data: providers } = useGetProvidersQuery();
@@ -20,14 +16,7 @@ export function PermissionsManagement() {
 
   return (
     <>
-    <Button
-          onClick={() => navigate("/")}
-          variant="outline"
-          className="border-[#395159] text-[#395159] mb-3"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Dashboard
-        </Button>
+   
       <Card className="p-6 bg-white mb-6">
         <div className="flex items-center justify-between">
           <div>

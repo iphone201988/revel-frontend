@@ -195,7 +195,7 @@ export function GoalDataPanel({
                                 onClick={() =>
                                   onAddTrial(
                                     goal?.id,
-                                    showSupportSelector.type,
+                                    showSupportSelector?.type,
                                     SupportLevel.Independent
                                   )
                                 }
@@ -208,7 +208,7 @@ export function GoalDataPanel({
                                 onClick={() =>
                                   onAddTrial(
                                     goal.id,
-                                    showSupportSelector.type,
+                                    showSupportSelector?.type,
                                     SupportLevel.Minimal
                                   )
                                 }
@@ -221,7 +221,7 @@ export function GoalDataPanel({
                                 onClick={() =>
                                   onAddTrial(
                                     goal.id,
-                                    showSupportSelector.type,
+                                    showSupportSelector?.type,
                                     SupportLevel.Moderate
                                   )
                                 }
@@ -330,7 +330,8 @@ export function GoalDataPanel({
                             </div>
                             <div className="text-xs text-[#395159] text-center">
                               Support Levels:
-                              {state.supportLevelCounts.independent.count > 0 && (
+                              {state.supportLevelCounts.independent.count >
+                                0 && (
                                 <span className="ml-2">
                                   Indep:{" "}
                                   {state.supportLevelCounts.independent.count}

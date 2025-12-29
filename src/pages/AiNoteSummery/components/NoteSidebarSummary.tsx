@@ -56,59 +56,34 @@ export function NoteSidebarSummary({ sessionData }: NoteSidebarSummaryProps) {
                     {goal.accuracy}%
                   </Badge>
                 </div>
-
-                {/* Support level breakdown */}
-                {/* <div className="text-xs text-[#395159] pl-2">
-                  {goal.supportLevel?.independent && (
-                    <span className="mr-2">
-                      Indep: {goal.supportLevel.independent.success}/
-                      {goal.supportLevel.independent.count}
-                    </span>
-                  )}
-                  {goal.supportLevel?.minimal && (
-                    <span className="mr-2">
-                      Min: {goal.supportLevel.minimal.success}/
-                      {goal.supportLevel.minimal.count}
-                    </span>
-                  )}
-                  {goal.supportLevel?.modrate && (
-                    <span>
-                      Mod: {goal.supportLevel.modrate.success}/
-                      {goal.supportLevel.modrate.count}
-                    </span>
-                  )}
-                </div> */}
               </div>
             ))}
           </div>
         </div>
 
-      
         <div className="pt-4 border-t border-[#ccc9c0] space-y-3">
-  <div>
-    <Label className="text-sm text-[#395159] mb-1 block">
-      Activities Engaged
-    </Label>
-    <p className="text-sm text-[#303630]">
-      {collected.activityEngaged?.length > 0
-        ? collected.activityEngaged.join(", ")
-        : "None recorded"}
-    </p>
-  </div>
+          <div>
+            <Label className="text-sm text-[#395159] mb-1 block">
+              Activities Engaged
+            </Label>
+            <p className="text-sm text-[#303630]">
+              {collected.activityEngaged?.length > 0
+                ? collected.activityEngaged.join(", ")
+                : "None recorded"}
+            </p>
+          </div>
 
-  <div>
-    <Label className="text-sm text-[#395159] mb-1 block">
-      Supports Observed
-    </Label>
-     <p className="text-sm text-[#303630]">
-   {collected.activityEngaged?.length > 0
-        ? collected.supportsObserved.join(", ")
-        : "None recorded"}
-   
-     </p>
-  </div>
-</div>
-
+          <div>
+            <Label className="text-sm text-[#395159] mb-1 block">
+              Supports Observed
+            </Label>
+            <p className="text-sm text-[#303630]">
+              {collected.activityEngaged?.length > 0
+                ? collected.supportsObserved.join(", ")
+                : "None recorded"}
+            </p>
+          </div>
+        </div>
 
         {/* Provider Observation */}
         {collected.providerObservation && (

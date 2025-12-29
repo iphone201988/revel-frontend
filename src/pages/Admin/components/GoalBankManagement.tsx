@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useFormik } from "formik";
-import { Target, Plus, Edit, Trash2, ArrowLeft } from "lucide-react";
+import { Target, Plus, Edit, Trash2 } from "lucide-react";
 import { Button } from "../../../components/Button";
 import { Card } from "../../../components/Card";
 import { Badge } from "../../../components/Badge";
@@ -22,7 +22,6 @@ import {
 } from "../../../components/Select";
 import { Textarea } from "../../../components/Textarea";
 import { Input } from "../../../components/Input";
-import { toast } from "react-toastify";
 import {
   useAddGoalMutation,
   useDeleteGoalMutation,
@@ -30,17 +29,15 @@ import {
 } from "../../../redux/api/provider";
 import { handleError } from "../../../utils/helper";
 import { SupportLevel } from "../../../utils/enums/enum";
-import { useNavigate } from "react-router-dom";
 import { GoalBankCategory, SupportLevelOptions } from "../../../Constant";
 import { SelectBox } from "../../../components/SelectBox";
 import { goalSchema } from "../../../Schema";
 import EditGoalPopup from "./EditGoal/EditGoal";
+import { showSuccess } from "../../../components/CustomToast";
 
 export function GoalBankManagement() {
   const [editingGoal, setEditingGoal] = useState<any | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
-
-  const navigate = useNavigate();
   const [addGoal, { data, isSuccess }] = useAddGoalMutation();
 
   const { data: goals } = useGetGoalsQuery();
@@ -87,12 +84,12 @@ export function GoalBankManagement() {
     await deleteGoal(goalId)
       .unwrap()
       .catch((error) => handleError(error));
-    toast.success("Goal deleted Successfully");
+   showSuccess("Goal deleted Successfully");
   };
 
   useEffect(() => {
     if (isSuccess) {
-      toast.success("Goal is added to the Goalbank");
+     showSuccess("Goal is added to the Goalbank");
     }
   }, [data]);
 
@@ -101,14 +98,7 @@ export function GoalBankManagement() {
 
   return (
     <>
-      <Button
-        onClick={() => navigate("/")}
-        variant="outline"
-        className="border-[#395159] text-[#395159] mb-3"
-      >
-        <ArrowLeft className="w-4 h-4 mr-2" />
-        Back to Dashboard
-      </Button>
+     
       <Card className="p-6 bg-white mb-6">
         <div className="flex items-center justify-between">
           <div>

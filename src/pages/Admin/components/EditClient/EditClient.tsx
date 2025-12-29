@@ -1,6 +1,5 @@
 import React, { useEffect } from "react";
 import { useFormik } from "formik";
-import { toast } from "react-toastify";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +12,8 @@ import { Input } from "../../../../components/Input";
 import { Label } from "../../../../components/Label";
 import { useUpdateClientMutation } from "../../../../redux/api/provider";
 import { editClientSchema } from "../../../../Schema";
-
+import { showError, showSuccess } from "../../../../components/CustomToast";
+import { handleError } from "../../../../utils/helper";
 
 interface EditClientDialogProps {
   open: boolean;
@@ -30,7 +30,7 @@ const EditClientDialog: React.FC<EditClientDialogProps> = ({
     useUpdateClientMutation();
 
   const formik = useFormik({
-    enableReinitialize: true, // 👈 IMPORTANT for edit
+    enableReinitialize: true, 
     initialValues: {
       name: client?.name || "",
       dob: client?.dob?.slice(0, 10) || "",
@@ -44,18 +44,19 @@ const EditClientDialog: React.FC<EditClientDialogProps> = ({
     validateOnBlur: false,
     validateOnChange: false,
     onSubmit: async (values) => {
-        console.log(values,"valieudjhaskdfalksdjflkasjdflkjaslkdfjalkjsdfkas");
+     
         
       try {
         await updateClient({
           clientId: client._id,
           data:values,
-        }).unwrap();
+        }).unwrap().catch((error)=>handleError(error));
 
-        toast.success("Client updated successfully");
+        //  showSuccess("Client updated successfully");
+       showSuccess("Client updated successfully")
         onOpenChange(false);
       } catch (error: any) {
-        toast.error(error?.data?.message || "Failed to update client");
+        showError(error?.data?.message || "Failed to update client");
       }
     },
   });

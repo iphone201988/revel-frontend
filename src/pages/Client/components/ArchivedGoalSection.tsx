@@ -9,10 +9,6 @@ import { GoalStatus } from '../../../utils/enums/enum';
 
 
 export function ArchivedGoalsSection({ goals }:any) {
-
-  console.log(goals, "::::::::::::");
-
-  
   return (
     <Card className="p-6 bg-white">
       <div className="flex items-center justify-between mb-6">

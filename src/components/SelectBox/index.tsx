@@ -60,9 +60,10 @@ type ClientProfileTextareaProps = {
   field: typeof ClientProfileFields[number];
   value: any;
   onChange: (val: string) => void;
+  placeholder:string
 };
 
-export const ClientProfileTextarea = ({ field, value, onChange }: ClientProfileTextareaProps) => {
+export const ClientProfileTextarea = ({ field, value, onChange , placeholder}: ClientProfileTextareaProps) => {
   const isSafety = field.key === "safetyConsiderations";
 
   return (
@@ -76,7 +77,7 @@ export const ClientProfileTextarea = ({ field, value, onChange }: ClientProfileT
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="min-h-20 border-amber-200 focus:border-amber-400"
-        placeholder={`Enter ${field.label}`}
+        placeholder={placeholder}
       />
     </div>
   );

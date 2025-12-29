@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { AppHeader } from "../../../components/AppHeader";
 import { Button } from "../../../components/Button";
 import { Card } from "../../../components/Card";
-import { toast } from "react-toastify";
 import { CheckCircle2 } from "lucide-react";
 import { SessionHeader } from "../components/SessionHeader";
 import { GoalDataPanel } from "../components/GoalDataPanel";
@@ -27,6 +26,7 @@ import {
 } from "../../../redux/api/provider";
 import { SupportLevel, type SupportLevelType } from "../../../utils/enums/enum";
 import { handleError } from "../../../utils/helper";
+import { showError, showInfo, showSuccess } from "../../../components/CustomToast";
 
 export function SessionDataCollectionScreen() {
   const location = useLocation();
@@ -59,23 +59,20 @@ export function SessionDataCollectionScreen() {
   const [providerObservations, setProviderObservations] = useState("");
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(true);
-
   const [showSupportOther, setShowSupportOther] = useState(false);
   const [supportOtherText, setSupportOtherText] = useState("");
   const [showActivityOther, setShowActivityOther] = useState(false);
   const [activityOtherText, setActivityOtherText] = useState("");
-
   const [removedGoalIds, setRemovedGoalIds] = useState<string[]>([]);
   const [isRemovedGoalsOpen, setIsRemovedGoalsOpen] = useState(false);
-
   const [collapsedGoals, setCollapsedGoals] = useState<Record<string, boolean>>(
     {}
   );
 
   const [showSupportSelector, setShowSupportSelector] = useState<{
     goalId: string;
-    type: "success" | "miss" | null;
-  }>();
+    type: "success" | "miss";
+  } | null>(null);
 
   /* -------------------- INIT GOAL STATES -------------------- */
 
@@ -177,7 +174,7 @@ export function SessionDataCollectionScreen() {
       ...prev,
       [goalId]: { ...prev[goalId], counter: 0 },
     }));
-    toast.success("Counter reset");
+    showSuccess("Counter reset");
   };
 
   const toggleGoalTimer = (goalId: string) => {
@@ -195,7 +192,7 @@ export function SessionDataCollectionScreen() {
       ...prev,
       [goalId]: { ...prev[goalId], timerSeconds: 0, timerRunning: false },
     }));
-    toast.success("Timer reset");
+    showSuccess("Timer reset");
   };
 
   /* -------------------- TRIALS -------------------- */
@@ -217,10 +214,11 @@ export function SessionDataCollectionScreen() {
 
   const addTrial = (
     goalId: string,
-    type: "success" | "miss",
+    type: "success" | "miss" | null | undefined,
     supportLevel: SupportLevelType
   ) => {
-    setGoalStates((prev) => {
+    setGoalStates((prev: any) => {
+      if (!prev) return;
       const key = supportLevelToKey(supportLevel);
 
       const history: TrialEntry[] = [
@@ -259,12 +257,12 @@ export function SessionDataCollectionScreen() {
 
   const removeGoal = (goalId: string) => {
     setRemovedGoalIds((prev) => [...prev, goalId]);
-    toast.success("Goal removed from session");
+    showSuccess("Goal removed from session");
   };
 
   const reAddGoal = (goalId: string) => {
     setRemovedGoalIds((prev) => prev.filter((id) => id !== goalId));
-    toast.success("Goal re-added to session");
+    showSuccess("Goal re-added to session");
   };
 
   // Transform API data to Goal interface
@@ -297,7 +295,7 @@ export function SessionDataCollectionScreen() {
   const handleCompleteSession = async () => {
     try {
       if (!sessionInitData?._id) {
-        toast.error("Session ID missing");
+       showError("Session ID missing");
         return;
       }
 
@@ -340,13 +338,13 @@ export function SessionDataCollectionScreen() {
         .catch((error) => handleError(error));
     } catch (err: any) {
       console.error(err);
-      toast.error(err?.data?.message || "Failed to collect session data");
+     showError(err?.data?.message || "Failed to collect session data");
     }
   };
 
   useEffect(() => {
     if (isSuccess) {
-      toast.success("Session data collected successfully");
+      showSuccess("Session data collected successfully");
       navigate("/ai-note-summery", {
         state: { sessionData: collectedData?.data },
       });
@@ -357,7 +355,7 @@ export function SessionDataCollectionScreen() {
 
   const handleBackToDashboard = async () => {
     await abandonSession(sessionInitData._id);
-    toast.info("Session abandoned");
+    showInfo("Session abandoned");
     navigate("/");
   };
 
@@ -464,7 +462,7 @@ export function SessionDataCollectionScreen() {
 
     try {
       await addSupportApi({ support: value }).unwrap();
-      toast.success("Custom support added");
+      showSuccess("Custom support added");
     } catch (err) {
       handleError(err);
     }
@@ -482,7 +480,7 @@ export function SessionDataCollectionScreen() {
 
     try {
       await addActivityApi({ activity: value }).unwrap();
-      toast.success("Custom activity added");
+      showSuccess("Custom activity added");
     } catch (err) {
       handleError(err);
     }
@@ -513,6 +511,16 @@ export function SessionDataCollectionScreen() {
       [goalId]: !prev[goalId],
     }));
   };
+  const handleSetSupportSelector = (
+    payload: { goalId: string; type: "success" | "miss" } | null
+  ) => {
+    if (!payload) {
+      setShowSupportSelector(null);
+      return;
+    }
+
+    setShowSupportSelector({ goalId: payload.goalId, type: payload.type });
+  };
 
   /* -------------------- RENDER -------------------- */
 
@@ -542,7 +550,7 @@ export function SessionDataCollectionScreen() {
             onToggleCollapse={toggleGoalCollapse}
             onRemoveGoal={removeGoal}
             onReAddGoal={reAddGoal}
-            onSetSupportSelector={setShowSupportSelector}
+            onSetSupportSelector={handleSetSupportSelector}
             onAddTrial={addTrial}
             onResetCounter={resetCounter}
             onIncrementCounter={incrementCounter}

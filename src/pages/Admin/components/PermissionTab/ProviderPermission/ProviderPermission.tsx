@@ -1,12 +1,10 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { AppHeader } from "../../../../../components/AppHeader";
 import { ArrowLeft, Shield, Save, User, Lock } from "lucide-react";
 import { Button } from "../../../../../components/Button";
 import { Card } from "../../../../../components/Card";
 import { Label } from "../../../../../components/Label";
 import { Switch } from "../../../../../components/Switch";
-// import { Screen } from '../types/navigation';
-import { toast } from "react-toastify";
 import { Badge } from "../../../../../components/Badge";
 import { Alert, AlertDescription } from "../../../../../components/Alert";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -24,6 +22,7 @@ import {
 
 
 import type { ProviderPermissions } from "../../../../../Types/types";
+import { showError } from "../../../../../components/CustomToast";
 
 
 export function ProviderPermissionsScreen() {
@@ -83,7 +82,7 @@ export function ProviderPermissionsScreen() {
     if (!providerData) return;
 
     if (providerData.systemRole === "Super Admin") {
-      toast.error("Super Admin permissions cannot be modified");
+      showError("Super Admin permissions cannot be modified");
       return;
     }
 
@@ -99,13 +98,13 @@ export function ProviderPermissionsScreen() {
 
       
     } catch (error: any) {
-      toast.error(error?.data?.message || "Failed to update permissions");
+      showError(error?.data?.message || "Failed to update permissions");
     }
   };
 
   return (
     <div className="min-h-screen bg-[#efefef]">
-      <AppHeader onLogout={() => {}} />
+      <AppHeader />
 
       <div className="max-w-screen-2xl mx-auto px-6 py-8">
         <div className="flex items-center justify-between mb-6">

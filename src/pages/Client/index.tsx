@@ -14,6 +14,7 @@ import {
 } from "../../components/Tabs";
 import { useGetArchivedGoalsQuery, useGetClientProfileQuery, useGetProvidersQuery, useGetUserProfileQuery, useSessionHistoryQuery } from "../../redux/api/provider";
 import { useLocation } from "react-router-dom";
+import { Archive, Calendar, FileText, Target, TrendingUp, Users } from "lucide-react";
 
 export function ClientScreen() {
   const location = useLocation();
@@ -48,7 +49,7 @@ const canViewAllSessions = isAdmin || userPermissions.includes("ViewAllSessions"
         dob={clientData?.dob}
         age={clientData?.age}
         diagnosis={clientData?.diagnosis}
-        onLogout={()=>{}}
+       
       />
 
       <div className="max-w-screen-2xl mx-auto px-6 pb-10">
@@ -58,13 +59,15 @@ const canViewAllSessions = isAdmin || userPermissions.includes("ViewAllSessions"
               value="goals"
               className="data-[state=active]:bg-[#395159] data-[state=active]:text-white"
             >
+               <Target className="w-4 h-4 mr-2" />
               ITP Goals
             </TabsTrigger>
             {canViewProgress && (
               <TabsTrigger
                 value="progress"
                 className="data-[state=active]:bg-[#395159] data-[state=active]:text-white"
-              >
+                >
+                <TrendingUp className="w-4 h-4 mr-2" />
                 Progress
               </TabsTrigger>
             )}
@@ -72,24 +75,28 @@ const canViewAllSessions = isAdmin || userPermissions.includes("ViewAllSessions"
               value="providers"
               className="data-[state=active]:bg-[#395159] data-[state=active]:text-white"
             >
+              <Users className="w-4 h-4 mr-2" />
               Providers
             </TabsTrigger>
             <TabsTrigger
               value="profile"
               className="data-[state=active]:bg-[#395159] data-[state=active]:text-white"
             >
+              <FileText className="w-4 h-4 mr-2" />
               Client Profile
             </TabsTrigger>
             <TabsTrigger
               value="history"
               className="data-[state=active]:bg-[#395159] data-[state=active]:text-white"
             >
+              <Calendar className="w-4 h-4 mr-2" />
               Session History
             </TabsTrigger>
             <TabsTrigger
               value="archived"
               className="data-[state=active]:bg-[#395159] data-[state=active]:text-white"
             >
+               <Archive className="w-4 h-4 mr-2" />
               Archived Goals
             </TabsTrigger>
           </TabsList>

@@ -1,6 +1,5 @@
-
-import { ArrowLeft, Clock } from 'lucide-react';
-import { Button } from '../../../components/Button';
+import { ArrowLeft, Clock } from "lucide-react";
+import { Button } from "../../../components/Button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,7 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '../../../components/AlertDailog';
+} from "../../../components/AlertDailog";
 
 interface SessionHeaderProps {
   clientName?: string;
@@ -47,7 +46,9 @@ export function SessionHeader({
             <AlertDialogHeader>
               <AlertDialogTitle>Abandon Session?</AlertDialogTitle>
               <AlertDialogDescription>
-                This session has not been completed. If you return to the dashboard now, all data collected will be lost and the session will be deleted. This action cannot be undone.
+                This session has not been completed. If you return to the
+                dashboard now, all data collected will be lost and the session
+                will be deleted. This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -61,27 +62,28 @@ export function SessionHeader({
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-        
+
         <div>
           <h2 className="text-[#303630]">{clientName}</h2>
           <p className="text-[#395159]">Session in Progress</p>
         </div>
       </div>
-      
+
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-[#ccc9c0]">
           <Clock className="w-5 h-5 text-[#395159]" />
-          <span className="text-[#303630] text-lg">{formatTime(elapsedTime)}</span>
+          <span className="text-[#303630] text-lg">
+            {formatTime(elapsedTime)}
+          </span>
         </div>
         <Button
           onClick={onToggleTimer}
           variant="outline"
           className="border-[#395159] text-[#395159]"
         >
-          {isTimerRunning ? 'Pause' : 'Resume'}
+          {isTimerRunning ? "Pause" : "Resume"}
         </Button>
       </div>
     </div>
   );
 }
-
