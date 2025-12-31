@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
     allowedHosts: [
-      "957695527930.ngrok-free.app",
+      "dfebfecc4f9f.ngrok-free.app",
       "nwhh0r9m-4173.inc1.devtunnels.ms",
     ], // 👈 Add your ngrok domain here
   },

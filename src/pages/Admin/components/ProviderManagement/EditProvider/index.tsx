@@ -1,13 +1,13 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { AppHeader } from "../../../../../components/AppHeader";
 import {
   ArrowLeft,
   User,
-  Lock,
-  Shield,
-  Key,
-  RefreshCw,
-  Trash2,
+  // Lock,
+  // Shield,
+  // Key,
+  // RefreshCw,
+  // Trash2,
 } from "lucide-react";
 import { Button } from "../../../../../components/Button";
 import { Card } from "../../../../../components/Card";
@@ -23,23 +23,23 @@ import {
 import {
   Tabs,
   TabsContent,
-  TabsList,
-  TabsTrigger,
+  // TabsList,
+  // TabsTrigger,
 } from "../../../../../components/Tabs";
-import { Switch } from "../../../../../components/Switch";
+// import { Switch } from "../../../../../components/Switch";
 import { Badge } from "../../../../../components/Badge";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "../../../../../components/AlertDailog";
+// import {
+//   AlertDialog,
+//   AlertDialogAction,
+//   AlertDialogCancel,
+//   AlertDialogContent,
+//   AlertDialogDescription,
+//   AlertDialogFooter,
+//   AlertDialogHeader,
+//   AlertDialogTitle,
+//   AlertDialogTrigger,
+// } from "../../../../../components/AlertDailog";
 
 import { useLocation, useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
@@ -85,14 +85,13 @@ export function ProviderEditScreen() {
       })
         .unwrap()
         .catch((error) => handleError(error));
-   
     },
   });
 
   useEffect(() => {
     if (isSuccess) {
-      showSuccess("Provider updated successfully!")
-      navigate('/admin')
+      showSuccess("Provider updated successfully!");
+      navigate("/admin");
     }
   }, [data]);
 
@@ -115,7 +114,7 @@ export function ProviderEditScreen() {
     }),
 
     onSubmit: () => {
-     showSuccess("Password updated successfully");
+      showSuccess("Password updated successfully");
       passwordFormik.resetForm();
     },
   });
@@ -123,26 +122,25 @@ export function ProviderEditScreen() {
   // -----------------------------
   // 2FA STATE
   // -----------------------------
-  const [twoFactorEnabled, setTwoFactorEnabled] = React.useState(true);
-  const [backupCodesGenerated, setBackupCodesGenerated] = React.useState(true);
-  console.log(backupCodesGenerated);
-  
+  // const [twoFactorEnabled, setTwoFactorEnabled] = React.useState(true);
+  // const [backupCodesGenerated, setBackupCodesGenerated] = React.useState(true);
+  // console.log(backupCodesGenerated);
 
-  const handleToggle2FA = () => {
-    setTwoFactorEnabled(!twoFactorEnabled);
-   showSuccess(twoFactorEnabled ? "2FA Disabled" : "2FA Enabled");
-  };
+  // const handleToggle2FA = () => {
+  //   setTwoFactorEnabled(!twoFactorEnabled);
+  //  showSuccess(twoFactorEnabled ? "2FA Disabled" : "2FA Enabled");
+  // };
 
-  const handleGenerateBackupCodes = () => {
-    setBackupCodesGenerated(true);
-   showSuccess("Backup codes generated");
-  };
+  // const handleGenerateBackupCodes = () => {
+  //   setBackupCodesGenerated(true);
+  //  showSuccess("Backup codes generated");
+  // };
 
-  const handleReset2FA = () => {
-    setTwoFactorEnabled(false);
-    setBackupCodesGenerated(false);
-   showSuccess("2FA device reset");
-  };
+  // const handleReset2FA = () => {
+  //   setTwoFactorEnabled(false);
+  //   setBackupCodesGenerated(false);
+  //  showSuccess("2FA device reset");
+  // };
 
   // LEVEL SUPERVISOR LOGIC
   // const needsSupervisor =
@@ -183,16 +181,16 @@ export function ProviderEditScreen() {
         </div>
 
         <Tabs defaultValue="information" className="w-full">
-          <TabsList className="mb-6 bg-white border border-[#ccc9c0]">
+          {/* <TabsList className="mb-6 bg-white border border-[#ccc9c0]">
             <TabsTrigger
               value="information"
               className="data-[state=active]:bg-[#395159] data-[state=active]:text-white"
             >
               <User className="w-4 h-4 mr-2" />
               Provider Information
-            </TabsTrigger>
+            </TabsTrigger> */}
 
-            <TabsTrigger
+            {/* <TabsTrigger
               value="password"
               className="data-[state=active]:bg-[#395159] data-[state=active]:text-white"
             >
@@ -206,8 +204,8 @@ export function ProviderEditScreen() {
             >
               <Shield className="w-4 h-4 mr-2" />
               Two-Factor Auth
-            </TabsTrigger>
-          </TabsList>
+            </TabsTrigger> */}
+          {/* </TabsList> */}
 
           {/* ---------------------- */}
           {/* PROVIDER INFORMATION */}
@@ -304,6 +302,7 @@ export function ProviderEditScreen() {
                     <Input
                       type="email"
                       name="email"
+                       disabled
                       value={formik.values.email}
                       onChange={formik.handleChange}
                       className="h-12"
@@ -357,7 +356,7 @@ export function ProviderEditScreen() {
           {/* ---------------------- */}
           {/* PASSWORD CHANGE */}
           {/* ---------------------- */}
-          <TabsContent value="password">
+          {/* <TabsContent value="password">
             <Card className="p-8 bg-white">
               <form
                 onSubmit={passwordFormik.handleSubmit}
@@ -405,15 +404,15 @@ export function ProviderEditScreen() {
                 </Button>
               </form>
             </Card>
-          </TabsContent>
+          </TabsContent> */}
 
           {/* ---------------------- */}
           {/* 2FA TAB */}
           {/* ---------------------- */}
-          <TabsContent value="2fa">
+          {/* <TabsContent value="2fa">
             <Card className="p-8 bg-white">
               <div className="space-y-6">
-                {/* STATUS */}
+              
                 <div className="p-4 bg-[#efefef] rounded-lg border border-[#ccc9c0] flex justify-between">
                   <div>
                     <h4 className="text-[#303630] mb-1">
@@ -433,7 +432,7 @@ export function ProviderEditScreen() {
                   />
                 </div>
 
-                {/* BACKUP CODES */}
+               
                 {twoFactorEnabled && (
                   <div className="p-4 bg-[#efefef] rounded-lg border border-[#ccc9c0] flex justify-between">
                     <div>
@@ -453,7 +452,7 @@ export function ProviderEditScreen() {
                   </div>
                 )}
 
-                {/* RESET 2FA */}
+              
                 {twoFactorEnabled && (
                   <div className="p-4 bg-red-50 rounded-lg border border-red-200 flex justify-between">
                     <div>
@@ -493,7 +492,7 @@ export function ProviderEditScreen() {
                 )}
               </div>
             </Card>
-          </TabsContent>
+          </TabsContent> */}
         </Tabs>
       </div>
     </div>

@@ -17,7 +17,10 @@ import { Separator } from "../../../components/Seprator";
 import { ScrollArea } from "../../../components/ScrollArea";
 import { Download, Search, X, CheckCircle2, Eye, Lock } from "lucide-react";
 import type { HistorySectionProps, SessionData } from "../../../Types/types";
-import { useDownloadSessionHistoryMutation } from "../../../redux/api/provider";
+import {
+  useDownloadSelectedSessionMutation,
+  useDownloadSessionHistoryMutation,
+} from "../../../redux/api/provider";
 import { handleDownloadFunction, handleError } from "../../../utils/helper";
 import { showSuccess } from "../../../components/CustomToast";
 
@@ -162,37 +165,22 @@ export function HistorySection({
     });
   }, [permissionFilteredSessions, sessionSearchQuery]);
 
-  const toggleSessionSelection = (index: number) => {
-    setSelectedSessions((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
+  const toggleSessionSelection = (sessionId: string) => {
+    setSelectedSessions((prev: any) =>
+      prev.includes(sessionId)
+        ? prev.filter((id: any) => id !== sessionId)
+        : [...prev, sessionId]
     );
   };
 
   const selectAllFilteredSessions = () => {
-    const visibleIndices = visibleSessions.map((_, idx) => idx);
-    setSelectedSessions(visibleIndices);
+    const allIds = visibleSessions.map((s) => s._id);
+    setSelectedSessions(allIds);
   };
 
   const deselectAllSessions = () => {
     setSelectedSessions([]);
   };
-
-  // const handleBatchDownload = () => {
-  //   if (selectedSessions.length === 0) return;
-  //   showSuccess(
-  //     `Preparing to download ${selectedSessions.length} session note${
-  //       selectedSessions.length !== 1 ? "s" : ""
-  //     }...`
-  //   );
-  //   setTimeout(() => {
-  //     showSuccess(
-  //       `${selectedSessions.length} session note${
-  //         selectedSessions.length !== 1 ? "s" : ""
-  //       } downloaded successfully`
-  //     );
-  //     setSelectedSessions([]);
-  //   }, 1500);
-  // };
 
   const openViewNote = (session: SessionData) => {
     setViewNoteData(session);
@@ -222,9 +210,44 @@ export function HistorySection({
   useEffect(() => {
     if (isSuccess) {
       showSuccess("Session Downlaod successfully..");
-     setDownloadingSessionId(null)
+      setDownloadingSessionId(null);
     }
   }, [isSuccess]);
+
+  const [
+    downloadSelectedSession,
+    { isLoading: isBatchDownloading, isSuccess: isBatchDownloaded },
+  ] = useDownloadSelectedSessionMutation();
+
+  const handleBatchDownload = async () => {
+    try {
+      const blob = await downloadSelectedSession({
+        sessionIds: selectedSessions,
+      })
+        .unwrap()
+        .catch((error) => handleError(error));
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = "selected-session-history.zip"; // or .pdf
+      document.body.appendChild(link);
+      link.click();
+
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      // await handleDownloadFunction(blob, "Session");
+    } catch (error) {
+      console.error("PDF download failed", error);
+    }
+  };
+  useEffect(() => {
+    if (isBatchDownloaded) {
+      showSuccess("Selected Session Downlaod successfully..");
+      setDownloadingSessionId(null);
+    }
+  }, [isBatchDownloaded]);
+
   return (
     <Card className="p-6 bg-white">
       <div className="flex items-center justify-between mb-6">
@@ -263,55 +286,49 @@ export function HistorySection({
             </Button>
           )}
         </div>
-        {sessionSearchQuery && (
+        {visibleSessions.length > 0 && (
           <div className="flex items-center justify-between mt-3">
             <p className="text-sm text-[#395159]">
-              Found {visibleSessions.length} session
-              {visibleSessions.length !== 1 ? "s" : ""} matching "
-              {sessionSearchQuery}"
+              Showing {visibleSessions.length} session
+              {visibleSessions.length !== 1 ? "s" : ""}
             </p>
-            {visibleSessions.length > 0 && (
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={
-                    selectedSessions.length === visibleSessions.length
-                      ? deselectAllSessions
-                      : selectAllFilteredSessions
-                  }
-                  className="border-[#395159] text-[#395159] h-8"
-                >
-                  {selectedSessions.length === visibleSessions.length &&
-                  visibleSessions.length > 0 ? (
-                    <>
-                      <CheckCircle2 className="w-4 h-4 mr-2" />
-                      Deselect All
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="w-4 h-4 mr-2 opacity-40" />
-                      Select All
-                    </>
-                  )}
-                </Button>
-                {/* {selectedSessions.length > 0 && (
-                  <>
-                    <Badge className="bg-[#395159] text-white">
-                      {selectedSessions.length} selected
-                    </Badge>
-                    <Button
-                      size="sm"
-                      onClick={handleBatchDownload}
-                      className="bg-[#395159] hover:bg-[#303630] text-white h-8"
-                    >
-                      <Download className="w-4 h-4 mr-1" />
-                      Download Selected ({selectedSessions.length})
-                    </Button>
-                  </>
-                )} */}
-              </div>
-            )}
+
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={
+                  selectedSessions.length === visibleSessions.length
+                    ? deselectAllSessions
+                    : selectAllFilteredSessions
+                }
+                className="border-[#395159] text-[#395159] h-8"
+              >
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                {selectedSessions.length === visibleSessions.length
+                  ? "Deselect All"
+                  : "Select All"}
+              </Button>
+
+              {selectedSessions.length > 0 && (
+                <>
+                  <Badge className="bg-[#395159] text-white">
+                    {selectedSessions.length} selected
+                  </Badge>
+
+                  <Button
+                    size="sm"
+                    onClick={handleBatchDownload}
+                    className="bg-[#395159] hover:bg-[#303630] text-white h-8"
+                  >
+                    <Download className="w-4 h-4 mr-1" />
+                    {isBatchDownloading
+                      ? "Downloading..."
+                      : " Download Selected"}
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -336,15 +353,14 @@ export function HistorySection({
               }`}
             >
               <div className="flex items-start gap-3 mb-3">
-                {sessionSearchQuery && (
-                  <div className="pt-1">
-                    <Checkbox
-                      checked={selectedSessions.includes(index)}
-                      onCheckedChange={() => toggleSessionSelection(index)}
-                      className="w-5 h-5"
-                    />
-                  </div>
-                )}
+                <div className="pt-1">
+                  <Checkbox
+                    checked={selectedSessions.includes(session._id)}
+                    onCheckedChange={() => toggleSessionSelection(session._id)}
+                    className="w-5 h-5"
+                  />
+                </div>
+
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <p className="text-[#303630] font-semibold">
@@ -401,7 +417,7 @@ export function HistorySection({
                 <Button
                   size="sm"
                   className="bg-[#395159] hover:bg-[#303630] text-white"
-                   disabled={downloadingSessionId === session._id}
+                  disabled={downloadingSessionId === session._id}
                   onClick={() => handleDownloadSession(session?._id)}
                 >
                   {downloadingSessionId === session._id

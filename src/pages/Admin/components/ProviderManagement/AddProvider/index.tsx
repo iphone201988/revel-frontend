@@ -47,12 +47,13 @@ export function ProviderAddScreen() {
     onSubmit: (values) => {
       addProvider(values).unwrap().catch((error)=>handleError(error));
 
-      navigate("/admin");
+     
     },
   });
   useEffect(() => {
     if (isSuccess) {
-      showSuccess("Provider added Successfully");
+      showSuccess("Provider added successfully. A setup link has been sent to the provider’s email address.");
+      navigate("/admin");
     }
   }, [data]);
 
@@ -190,6 +191,7 @@ export function ProviderAddScreen() {
                   className="h-12"
                   value={formik.values.email}
                   onChange={formik.handleChange}
+                 
                   placeholder="provider@example.com"
                 />
                 {errorText("email")}

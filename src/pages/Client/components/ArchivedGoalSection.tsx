@@ -1,14 +1,10 @@
+import { Card } from "../../../components/Card";
+import { Badge } from "../../../components/Badge";
+import { Separator } from "../../../components/Seprator";
+import { AlertTriangle, Archive, CheckCircle2 } from "lucide-react";
+import { GoalStatus } from "../../../utils/enums/enum";
 
-import { Card } from '../../../components/Card';
-import { Badge } from '../../../components/Badge';
-import { Separator } from '../../../components/Seprator';
-import { AlertTriangle, Archive, CheckCircle2 } from 'lucide-react';
-import { GoalStatus } from '../../../utils/enums/enum';
-
-
-
-
-export function ArchivedGoalsSection({ goals }:any) {
+export function ArchivedGoalsSection({ goals }: any) {
   return (
     <Card className="p-6 bg-white">
       <div className="flex items-center justify-between mb-6">
@@ -38,8 +34,8 @@ export function ArchivedGoalsSection({ goals }:any) {
                     <Badge
                       className={`${
                         goal.goalStatus === GoalStatus.Mastered
-                          ? 'bg-green-600 hover:bg-green-700'
-                          : 'bg-amber-600 hover:bg-amber-700'
+                          ? "bg-green-600 hover:bg-green-700"
+                          : "bg-amber-600 hover:bg-amber-700"
                       } text-white`}
                     >
                       {goal.goalStatus === GoalStatus.Mastered ? (
@@ -56,10 +52,10 @@ export function ArchivedGoalsSection({ goals }:any) {
                     </Badge>
 
                     <span className="text-sm text-[#395159]">
-                      Archived:{' '}
+                      Archived:{" "}
                       {goal.date
                         ? new Date(goal.date).toLocaleDateString()
-                        : 'N/A'}
+                        : "N/A"}
                     </span>
                   </div>
 
@@ -86,21 +82,25 @@ export function ArchivedGoalsSection({ goals }:any) {
                     Original Mastery Criteria:
                   </span>
                   <p className="text-[#303630]">
-                    {goal.goal?.criteriaForMastry?.masteryPercentage}% across{' '}
-                    {goal.goal?.criteriaForMastry?.acrossSession} sessions
+                    {goal?.goal?.criteriaForMastry?.masteryPercentage}% across{" "}
+                    {goal?.goal?.criteriaForMastry?.acrossSession} sessions
                   </p>
                 </div>
 
-                {goal.goalStatus === GoalStatus.Mastered && (
+                {goal?.goalStatus === GoalStatus.Mastered && (
                   <div>
-                    <span className="text-[#395159]">
-                      Final Success Rate:
-                    </span>
-                    <p className="text-[#303630]">
-                      {goal.successRate}%
-                    </p>
+                    <span className="text-[#395159]">Final Success Rate:</span>
+                    <p className="text-[#303630]">{goal?.successRate}%</p>
                   </div>
                 )}
+
+                {goal?.goalStatus === GoalStatus.Discontinued &&
+                  goal?.reason && (
+                    <div className="col-span-2">
+                      <span className="text-[#395159]">Reason:</span>
+                      <p className="text-[#303630]">{goal.reason}</p>
+                    </div>
+                  )}
               </div>
             </div>
           ))}
@@ -109,4 +109,3 @@ export function ArchivedGoalsSection({ goals }:any) {
     </Card>
   );
 }
-

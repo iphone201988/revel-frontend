@@ -2,8 +2,8 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 const baseQuery = fetchBaseQuery({
-  // baseUrl: "https://7a3ecf88eb3d.ngrok-free.app/api",
-  baseUrl: " https://957695527930.ngrok-free.app/api",
+  baseUrl: "http://localhost:2001/api",
+  // baseUrl: "https://03d8d4cea176.ngrok-free.app/api",
   prepareHeaders: (headers) => {
     const auth = localStorage.getItem("token");
     headers.set("ngrok-skip-browser-warning", "69420");
@@ -25,6 +25,8 @@ const GOAL_TAG = "GOAL";
 const PERMISSION_TAG = "PERMISSIONS";
 const ACTIVITY_TAG = "ACTIVITY";
 const SUPPORT_TAG = "SUPPORT";
+const UPDATE_STATUS_TAG= 'UPDATE_GOAL_STATUS'
+const ARCHIVED_TAG = 'ARCHIVED'
 const AUDIT_TAG = "AUDIT";
 export const providerApi = createApi({
   reducerPath: "providerApi",
@@ -36,6 +38,8 @@ export const providerApi = createApi({
     GOAL_TAG,
     PERMISSION_TAG,
     ACTIVITY_TAG,
+    UPDATE_STATUS_TAG,
+    ARCHIVED_TAG,
     SUPPORT_TAG,
   ],
   endpoints: (builder) => ({
@@ -309,6 +313,7 @@ export const providerApi = createApi({
       query: (clientId) => ({
         url: `/provider/archived?clientId=${clientId}`,
       }),
+      providesTags: [ARCHIVED_TAG]
     }),
     progressReport: builder.query<any, any>({
       query: (clientId) => ({
@@ -319,6 +324,7 @@ export const providerApi = createApi({
       query: (clientId) => ({
         url: `/provider/goalProgress?clientId=${clientId}`,
       }),
+      providesTags:[UPDATE_STATUS_TAG]
     }),
 
     submitTicket: builder.mutation({
@@ -430,6 +436,25 @@ export const providerApi = createApi({
       }),
       invalidatesTags: [AUDIT_TAG],
     }),
+
+    downloadSelectedSession: builder.mutation<any, any>({
+      query: (body) => ({
+        url: `/download/selectedSession`,
+        method: "POST",
+        body,
+        responseHandler: (response) => response.blob(),
+      }),
+      invalidatesTags: [AUDIT_TAG],
+    }),
+   
+     updateGoalStatus: builder.mutation({
+      query: ({ clientId, goalId, status , reason}) => ({
+        url: "/provider/updateStatus",
+        method: "PUT",
+        body: { clientId, goalId, status , reason},
+      }),  
+      invalidatesTags: [UPDATE_STATUS_TAG, CLIENT_TAG, ARCHIVED_TAG]
+    }),
   }),
 });
 
@@ -482,4 +507,6 @@ export const {
   useDownloadSessionNotesMutation,
   useDownloadAuditlogsMutation,
   useDownloadSessionHistoryMutation,
+  useDownloadSelectedSessionMutation,
+  useUpdateGoalStatusMutation
 } = providerApi;

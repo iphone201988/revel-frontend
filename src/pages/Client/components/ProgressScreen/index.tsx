@@ -178,6 +178,7 @@ export function ProgressScreen({ clientId }: ProgressScreenProps) {
 
         return (
           <Card key={goal.goalId} className="p-6 bg-white">
+           
             <div className="mb-4">
               <Badge className="bg-[#395159] text-white mb-2">
                 {goal.category}
@@ -185,6 +186,7 @@ export function ProgressScreen({ clientId }: ProgressScreenProps) {
               <h3 className="text-[#303630] mb-4">
                 {goal.goal}
               </h3>
+               <p>Performance by Support Level over last 30 days</p>
             </div>
 
             <ResponsiveContainer width="100%" height={350}>

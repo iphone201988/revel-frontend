@@ -27,7 +27,7 @@ export function ClientScreen() {
   const { data } = useGetClientProfileQuery({ clientId }, { skip: !clientId });
   const clientData: any = data?.data;
   
-  const {data:archivedGoals}  = useGetArchivedGoalsQuery( clientData?._id)
+  const {data:archivedGoals}  = useGetArchivedGoalsQuery( clientId , { skip: !clientId })
   const {data:providers}:any = useGetProvidersQuery()
   const providerList  = providers?.data
 

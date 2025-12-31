@@ -110,30 +110,59 @@ useEffect(() => {
   //   });
   // };
 
-  const getActionBadge = (action: string) => {
-    const actionMap: Record<string, { label: string; color: string }> = {
-      login: { label: "Provider Login", color: "bg-blue-500" },
-      logout: { label: "Provider Logout", color: "bg-gray-500" },
-      view_client: { label: "View Clients", color: "bg-green-500" },
-      create_client: { label: "Create Client", color: "bg-emerald-500" },
-      update_client: { label: "Update Client", color: "bg-yellow-500" },
-      delete_client: { label: "Delete Client", color: "bg-red-500" },
-      view_session: { label: "View Session", color: "bg-green-500" },
-      create_session: { label: "Create Session", color: "bg-emerald-500" },
-      update_session: { label: "Update Session", color: "bg-yellow-500" },
-      sign_qsp: { label: "QSP Signature", color: "bg-purple-500" },
-      export_pdf: { label: "Export", color: "bg-orange-500" },
-      create_provider: { label: "Create Provider", color: "bg-emerald-500" },
-      update_provider: { label: "Update Provider", color: "bg-yellow-500" },
-      view_audit_logs: { label: "View Statistics", color: "bg-indigo-500" },
-    };
+ const getActionBadge = (action: string) => {
+  const actionMap: Record<string, { label: string; color: string }> = {
+    // AUTH
+    "Provider Login": { label: "Provider Login", color: "bg-blue-500" },
+    "Provider Logout": { label: "Provider Logout", color: "bg-gray-500" },
+    "Send Otp": { label: "Send OTP", color: "bg-indigo-500" },
+    "Verify Otp": { label: "Verify OTP", color: "bg-indigo-600" },
+    "Set Password": { label: "Set Password", color: "bg-purple-500" },
 
-    const config = actionMap[action] || { label: action, color: "bg-gray-500" };
-    return (
-      <Badge className={`${config.color} text-white`}>{config.label}</Badge>
-    );
+    // PROVIDER
+    "View Provider Profile": { label: "View Provider Profile", color: "bg-green-500" },
+    "View Providers": { label: "View Providers", color: "bg-green-500" },
+    "Create Provider": { label: "Create Provider", color: "bg-emerald-500" },
+    "Update Provider": { label: "Update Provider", color: "bg-yellow-500" },
+    "View Permission": { label: "View Permission", color: "bg-indigo-500" },
+
+    // CLIENT
+    "View Clients": { label: "View Clients", color: "bg-green-500" },
+    "Create Client": { label: "Create Client", color: "bg-emerald-500" },
+    "Update Client": { label: "Update Client", color: "bg-yellow-500" },
+    "View Client Profile": { label: "View Client Profile", color: "bg-green-500" },
+
+    // GOALS
+    "Add Goal Bank": { label: "Add Goal Bank", color: "bg-emerald-500" },
+    "Edit Goal Bank": { label: "Edit Goal Bank", color: "bg-yellow-500" },
+    "View Goal Bank": { label: "View Goal Bank", color: "bg-green-500" },
+    "Add Client Goal": { label: "Add Client Goal", color: "bg-emerald-500" },
+
+    // SESSION
+    "Start Session": { label: "Start Session", color: "bg-blue-500" },
+    "View Sessions": { label: "View Sessions", color: "bg-green-500" },
+    "Generate Notes": { label: "Generate Notes", color: "bg-purple-500" },
+
+    // AUDIT / LOGS
+    "View Audit Logs": { label: "View Audit Logs", color: "bg-indigo-500" },
+    "View Statistics": { label: "View Statistics", color: "bg-indigo-500" },
+
+    // EXPORT
+    Export: { label: "Export", color: "bg-orange-500" },
   };
-  
+
+  const config = actionMap[action] || {
+    label: action,
+    color: "bg-gray-500",
+  };
+
+  return (
+    <Badge className={`${config.color} text-white`}>
+      {config.label}
+    </Badge>
+  );
+};
+
 
 
 // GOAL

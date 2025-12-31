@@ -102,8 +102,6 @@ export function GoalsSection({ clientId, clientGoals }: GoalsSectionProps) {
         .unwrap()
         .catch((error) => handleError(error));
 
-      showSuccess("Goal assigned to client");
-
       setIsAddingGoalFromBank(false);
       setSelectedBankGoal(null);
       setEditedGoalText("");
@@ -234,7 +232,7 @@ export function GoalsSection({ clientId, clientGoals }: GoalsSectionProps) {
 
   useEffect(()=>{
     if (addGoalSuccess) {
-      showSuccess("Goal is added to the client")
+      showSuccess("Goal is assigned to the client")
     }
   },[addGoalSuccess])
 
