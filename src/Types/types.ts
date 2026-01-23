@@ -28,6 +28,7 @@ export interface ProviderPermissions {
     viewProgressReports: boolean;
     exportData: boolean;
     managePermissions: boolean;
+    qspSignatureRequired:boolean
   };
 }
 export interface GoalDataCollection {
@@ -87,4 +88,21 @@ export interface HistorySectionProps {
   currentUser: any;
   canViewAllSessions?: boolean;
   canviewAllSessions?: boolean;
+}
+export interface PendingNote {
+  id: string;
+  clientId: string;
+  clientName: string;
+  clientDob: string;
+  providerId: string;
+  providerName: string;
+  providerCredential: string;
+  sessionDate: string;
+  signedDate: string;
+  goals: string;
+  summary: string;
+
+  daysPending: number;
+  urgencyLevel: 'normal' | 'warning' | 'critical';
+  fullNoteData?: any;
 }

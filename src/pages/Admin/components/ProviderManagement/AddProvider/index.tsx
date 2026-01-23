@@ -24,7 +24,7 @@ import { showSuccess } from "../../../../../components/CustomToast";
 export function ProviderAddScreen() {
   const navigate = useNavigate();
 
-  const [addProvider, { data, isSuccess }] = useAddProviderMutation();
+  const [addProvider, { data, isSuccess , isLoading}] = useAddProviderMutation();
 
   // -------------------- VALIDATION --------------------
   
@@ -57,11 +57,7 @@ export function ProviderAddScreen() {
     }
   }, [data]);
 
-  // const needsSupervisor =
-  //   formik.values.clinicRole?.toLowerCase().includes("level 1") ||
-  //   formik.values.clinicRole?.toLowerCase().includes("level 2") ||
-  //   formik.values.clinicRole?.toLowerCase().includes("level1") ||
-  //   formik.values.clinicRole?.toLowerCase().includes("level2");
+
 
   const errorText = (field: keyof typeof formik.values) => {
     const error = formik.errors[field];
@@ -232,7 +228,7 @@ export function ProviderAddScreen() {
                 type="submit"
                 className="flex-1 h-12 bg-[#395159] hover:bg-[#303630] text-white"
               >
-                Add Provider
+               {isLoading ? "Processing..." :"Add Provider"}
               </Button>
 
               <Button

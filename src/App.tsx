@@ -20,6 +20,7 @@ import { GoalReviewScreen } from './pages/Client/components/GoalReview'
 import { ReportsScreen } from './pages/ReportScreen/ReportScreen'
 import { AccountManagementScreen } from './pages/AccountManagement'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { QSPSignatureReviewScreen } from './pages/Dashboard/components/QSPSignatureReviewScreen'
 
 
 function App() {
@@ -73,6 +74,7 @@ function App() {
 
           <Route path='/help' element={<HelpScreen />} />
           <Route path='/account-management' element={<AccountManagementScreen />} />
+          <Route path='/qspSignature' element={<QSPSignatureReviewScreen />} />
         </Routes>
       </BrowserRouter>
     </>

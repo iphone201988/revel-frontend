@@ -1,4 +1,6 @@
-import React, {  useEffect, useState } from "react";
+import  { useEffect, useState } from "react";
+import { useFormik } from "formik";
+import * as Yup from "yup";
 import { Badge } from "../../../components/Badge";
 import { Button } from "../../../components/Button";
 import { Card } from "../../../components/Card";
@@ -21,7 +23,7 @@ import {
 } from "../../../components/Select";
 import { Textarea } from "../../../components/Textarea";
 import { Target, Plus, Calendar, Edit, TrendingUp } from "lucide-react";
-import { toast } from "react-toastify";
+
 import type { Goal } from "./types";
 import { useNavigate } from "react-router-dom";
 import {
@@ -33,7 +35,7 @@ import { handleError } from "../../../utils/helper";
 import moment from "moment";
 import { SupportLevel } from "../../../utils/enums/enum";
 import { SelectBox } from "../../../components/SelectBox";
-import { GoalBankCategory } from "../../../Constant";
+import { GoalBankCategory, SupportLevelOptions } from "../../../Constant";
 import { showSuccess } from "../../../components/CustomToast";
 
 interface GoalsSectionProps {
@@ -41,207 +43,249 @@ interface GoalsSectionProps {
   clientGoals: Goal[];
 }
 
+// Validation Schemas
+const bankGoalSchema = Yup.object({
+  targetDate: Yup.string()
+    .required("Target date is required"),
+  baselinePercentage: Yup.number()
+    .min(0, "Baseline must be at least 0")
+    .max(100, "Baseline cannot exceed 100")
+    .required("Baseline percentage is required"),
+});
+
+const customGoalSchema = Yup.object({
+  category: Yup.string()
+    .required("Please select a FEDC category"),
+  discription: Yup.string()
+    .trim()
+    .required("Goal description is required"),
+  targetDate: Yup.string()
+    .required("Target date is required"),
+  baselinePercentage: Yup.number()
+    .min(0, "Baseline must be between 0 and 100")
+    .max(100, "Baseline must be between 0 and 100")
+    .required("Baseline percentage is required"),
+  masteryPercentage: Yup.number()
+    .min(1, "Mastery percentage must be between 1 and 100")
+    .max(100, "Mastery percentage must be between 1 and 100")
+    .required("Mastery percentage is required"),
+  acrossSession: Yup.number()
+    .min(1, "Across sessions must be at least 1")
+    .required("Session count is required"),
+  supportLevel: Yup.string()
+    .required("Support level is required"),
+});
+
+const editGoalSchema = Yup.object({
+  targetDate: Yup.string()
+    .required("Target date is required"),
+  baselinePercentage: Yup.number()
+    .min(1, "Baseline must be between 1 and 100")
+    .max(100, "Baseline must be between 1 and 100")
+    .required("Baseline percentage is required"),
+});
+
+const modifyCriteriaSchema = Yup.object({
+  masteryPercentage: Yup.number()
+    .min(1, "Mastery percentage must be between 1 and 100")
+    .max(100, "Mastery percentage must be between 1 and 100")
+    .required("Mastery percentage is required"),
+  sessionCount: Yup.number()
+    .min(1, "Session count must be at least 1")
+    .required("Session count is required"),
+  supportLevel: Yup.string()
+    .required("Support level is required"),
+});
+
 export function GoalsSection({ clientId, clientGoals }: GoalsSectionProps) {
   const { data: goals } = useGetGoalsQuery();
-
-  const [addItpGoalToClient, {isSuccess: addGoalSuccess}] = useAddItpGoalToClientMutation();
-
-  const [updateItpGoal, {isSuccess : isUpdated}] = useUpdateItpGoalMutation(); //done
+  const [addItpGoalToClient, { isSuccess: addGoalSuccess }] =
+    useAddItpGoalToClientMutation();
+  const [updateItpGoal, { isSuccess: isUpdated }] = useUpdateItpGoalMutation();
 
   const navigate = useNavigate();
   const [isAddingGoalFromBank, setIsAddingGoalFromBank] = useState(false);
   const [isAddingCustomGoal, setIsAddingCustomGoal] = useState(false);
   const [isEditingGoal, setIsEditingGoal] = useState(false);
-  const [editingGoalId, setEditingGoalId] = useState<number | null>(null);
-
-  const [selectedBankGoal, setSelectedBankGoal] = useState<Goal | null>(null);
-  const [editedGoalText, setEditedGoalText] = useState("");
-  const [goalTargetDate, setGoalTargetDate] = useState("");
-  const [baselineData, setBaselineData] = useState("0");
-
-  const [customGoalCategory, setCustomGoalCategory] = useState("");
-  const [customGoalText, setCustomGoalText] = useState("");
-  const [customGoalTargetDate, setCustomGoalTargetDate] = useState("");
-  const [customBaselineData, setCustomBaselineData] = useState("0");
-  const [customMasteryPercentage, setCustomMasteryPercentage] = useState("80");
-  const [customMasterySessionCount, setCustomMasterySessionCount] =
-    useState("5");
-  const [customSupportLevel, setCustomSupportLevel] = useState("");
-
-  const [editGoalText, setEditGoalText] = useState("");
-  const [editGoalCategory, setEditGoalCategory] = useState("");
-  const [editGoalTargetDate, setEditGoalTargetDate] = useState("");
-  const [editGoalBaseline, setEditGoalBaseline] = useState("0");
-
   const [isModifyingCriteria, setIsModifyingCriteria] = useState(false);
+  const [selectedBankGoal, setSelectedBankGoal] = useState<Goal | null>(null);
+  const [editingGoalId, setEditingGoalId] = useState<number | null>(null);
   const [modifyingGoalId, setModifyingGoalId] = useState<number | null>(null);
-  const [criteriaMasteryPercentage, setCriteriaMasteryPercentage] =
-    useState("80");
-  const [criteriaMasterySessionCount, setCriteriaMasterySessionCount] =
-    useState("5");
-  const [criteriaSupportLevel, setCriteriaSupportLevel] = useState("");
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  // Bank Goal Form
+  const bankGoalFormik = useFormik({
+    initialValues: {
+      targetDate: "",
+      baselinePercentage: 0,
+      editedGoalText: "",
+    },
+    validationSchema: bankGoalSchema,
+    onSubmit: async (values, { resetForm }) => {
+      if (!selectedBankGoal) return;
+
+      try {
+        await addItpGoalToClient({
+          goalId: selectedBankGoal._id,
+          clientId,
+          targetDate: values.targetDate,
+          baselinePercentage: Number(values.baselinePercentage),
+        }).unwrap();
+
+        setIsAddingGoalFromBank(false);
+        setSelectedBankGoal(null);
+        resetForm();
+      } catch (err: any) {
+        handleError(err);
+      }
+    },
+  });
+
+  // Custom Goal Form
+  const customGoalFormik = useFormik({
+    initialValues: {
+      category: "",
+      discription: "",
+      targetDate: "",
+      baselinePercentage: 0,
+      masteryPercentage: 80,
+      acrossSession: 5,
+      supportLevel: SupportLevel.Independent,
+    },
+    validationSchema: customGoalSchema,
+    onSubmit: async (values, { resetForm }) => {
+      const payload = {
+        clientId,
+        category: values.category,
+        discription: values.discription,
+        targetDate: values.targetDate,
+        baselinePercentage: Number(values.baselinePercentage),
+        criteriaForMastry: {
+          masteryPercentage: Number(values.masteryPercentage),
+          acrossSession: Number(values.acrossSession),
+          supportLevel: values.supportLevel,
+        },
+      };
+
+      try {
+        await addItpGoalToClient(payload).unwrap();
+        setIsAddingCustomGoal(false);
+        resetForm();
+      } catch (error) {
+        handleError(error);
+      }
+    },
+  });
+
+  // Edit Goal Form
+  const editGoalFormik = useFormik({
+    initialValues: {
+      targetDate: "",
+      baselinePercentage: 0,
+      category: "",
+      discription: "",
+    },
+    validationSchema: editGoalSchema,
+    onSubmit: async (values) => {
+      try {
+        // console.log("client goals....",clientGoals)
+        const goalToUpdate = clientGoals.find(
+          (item: any) => item?._id === editingGoalId
+        );
+
+        if (!goalToUpdate) return;
+
+        await updateItpGoal({
+          itpGoalId: goalToUpdate._id,
+          clientId,
+          data: {
+            targetDate: values.targetDate,
+            baselinePercentage: Number(values.baselinePercentage),
+          },
+        }).unwrap();
+
+        setIsEditingGoal(false);
+        setEditingGoalId(null);
+      } catch (error: any) {
+        handleError(error);
+      }
+    },
+  });
+
+  // Modify Criteria Form
+  const modifyCriteriaFormik = useFormik({
+    initialValues: {
+      masteryPercentage: 80,
+      sessionCount: 5,
+      supportLevel: "",
+    },
+    validationSchema: modifyCriteriaSchema,
+    onSubmit: async (values) => {
+      try {
+        const goalToUpdate = clientGoals.find(
+          (item: any) => item?.goal?._id === modifyingGoalId
+        );
+
+        if (!goalToUpdate) {
+          console.error("Goal not found");
+          return;
+        }
+
+        await updateItpGoal({
+          itpGoalId: goalToUpdate._id,
+          clientId,
+          data: {
+            masteryPercentage: values.masteryPercentage,
+            sessionCount: values.sessionCount,
+            supportLevel: values.supportLevel,
+          },
+        }).unwrap().catch((error)=>handleError(error));
+
+        setIsModifyingCriteria(false);
+        setModifyingGoalId(null);
+      } catch (error: any) {
+        handleError(error);
+      }
+    },
+  });
 
   const selectBankGoal = (goal: any) => {
     setSelectedBankGoal(goal);
-    setEditedGoalText(goal?.discription);
+    bankGoalFormik.setFieldValue("editedGoalText", goal?.discription);
   };
-
-  const handleAddGoalFromBank = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!selectedBankGoal) return;
-
-    try {
-      await addItpGoalToClient({
-        goalId: selectedBankGoal._id,
-        clientId,
-        targetDate: goalTargetDate,
-        baselinePercentage: Number(baselineData),
-      })
-        .unwrap()
-        .catch((error) => handleError(error));
-
-      setIsAddingGoalFromBank(false);
-      setSelectedBankGoal(null);
-      setEditedGoalText("");
-      setGoalTargetDate("");
-      setBaselineData("0");
-    } catch (err: any) {
-      toast.error(err?.data?.message || "Failed to add goal");
-    }
-  }; //done
-
-  const handleAddCustomGoal = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // 🔹 Frontend validation
-    const errors: Record<string, string> = {};
-
-    if (!customGoalCategory) errors.category = "Please select a FEDC category";
-    if (!customGoalText.trim())
-      errors.description = "Goal description is required";
-    if (!customGoalTargetDate) errors.targetDate = "Target date is required";
-
-    if (Number(customBaselineData) < 0 || Number(customBaselineData) > 100) {
-      errors.baseline = "Baseline percentage must be between 0 and 100";
-    }
-
-    if (
-      Number(customMasteryPercentage) < 1 ||
-      Number(customMasteryPercentage) > 100
-    ) {
-      errors.masteryPercentage = "Mastery percentage must be between 1 and 100";
-    }
-
-    if (Number(customMasterySessionCount) < 1) {
-      errors.sessionCount = "Across sessions must be at least 1";
-    }
-
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      return;
-    }
-
-    const payload = {
-      clientId,
-      category: customGoalCategory,
-      discription: customGoalText,
-      targetDate: customGoalTargetDate,
-      baselinePercentage: Number(customBaselineData),
-      criteriaForMastry: {
-        masteryPercentage: Number(customMasteryPercentage),
-        acrossSession: Number(customMasterySessionCount),
-        supportLevel: customSupportLevel,
-      },
-    };
-
-    try {
-      await addItpGoalToClient(payload).unwrap();
-
-      // ✅ Reset state after success
-      setIsAddingCustomGoal(false);
-      setCustomGoalCategory("");
-      setCustomGoalText("");
-      setCustomGoalTargetDate("");
-      setCustomBaselineData("0");
-      setCustomMasteryPercentage("80");
-      setCustomMasterySessionCount("5");
-      setCustomSupportLevel(SupportLevel.Independent);
-      setFormErrors({});
-    } catch (error) {
-      console.error(error);
-    }
-  }; //done
 
   const openEditGoal = (goal: any) => {
     setEditingGoalId(goal?._id);
-    setEditGoalText(goal?.goal?.discription);
-    setEditGoalCategory(goal?.goal?.category);
-    setEditGoalTargetDate(goal?.targetDate);
-    setEditGoalBaseline(goal?.baselinePercentage);
+    editGoalFormik.setValues({
+      discription: goal?.goal?.discription,
+      category: goal?.goal?.category,
+      targetDate: goal?.targetDate,
+      baselinePercentage: goal?.baselinePercentage,
+    });
     setIsEditingGoal(true);
-  }; // done
-
-  const handleEditGoal = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    try {
-      const goalToUpdate = clientGoals.find(
-        (item: any) => item._id === editingGoalId
-      );
-
-      if (!goalToUpdate) return;
-
-      await updateItpGoal({
-        itpGoalId: goalToUpdate._id,
-        clientId,
-        data: {
-          targetDate: editGoalTargetDate || goalToUpdate.targetDate,
-          baselinePercentage: Number(editGoalBaseline),
-        },
-      })
-        .unwrap()
-        .catch((error) => handleError(error));
-
-      setIsEditingGoal(false);
-      setEditingGoalId(null);
-    } catch (error: any) {
-      handleError(error);
-    }
-  }; //done
+  };
 
   const openModifyCriteria = (goal: any) => {
     setModifyingGoalId(goal?.goal?._id);
-    setCriteriaMasteryPercentage(
-      goal?.goal?.criteriaForMastry?.masteryPercentage
-    );
-    setCriteriaMasterySessionCount(
-      goal?.goal?.criteriaForMastry?.acrossSession
-    );
-    setCriteriaSupportLevel(goal?.goal?.criteriaForMastry?.supportLevel);
-    setIsModifyingCriteria(true);
-  }; //done
-
-  const handleModifyCriteria = (e: React.FormEvent) => {
-    e.preventDefault();
     
-    setIsModifyingCriteria(false);
-    setModifyingGoalId(null);
-  }; // done
+    modifyCriteriaFormik.setValues({
+      masteryPercentage: goal?.masteryPercentage || 80,
+      sessionCount: goal?.sessionCount || 5,
+      supportLevel: goal?.supportLevel || "",
+    });
+    setIsModifyingCriteria(true);
+  };
 
-  useEffect(()=>{
+  useEffect(() => {
     if (addGoalSuccess) {
-      showSuccess("Goal is assigned to the client")
+      showSuccess("Goal is assigned to the client");
     }
-  },[addGoalSuccess])
+  }, [addGoalSuccess]);
 
-  useEffect(()=>{
+  useEffect(() => {
     if (isUpdated) {
-      showSuccess("Client Goal updated successfully...")
+      showSuccess("Client Goal updated successfully...");
     }
-  })
-
+  }, [isUpdated]);
 
   return (
     <Card className="p-6 bg-white">
@@ -249,16 +293,24 @@ export function GoalsSection({ clientId, clientGoals }: GoalsSectionProps) {
         <h3 className="text-[#303630]">Current ITP Goals</h3>
         <div className="flex gap-2">
           <Button
-            onClick={() => navigate("/goal-review", {state:{clientId}})} //clientId
+            onClick={() => navigate("/goal-review", { state: { clientId } })}
             variant="outline"
             className="border-[#395159] text-[#395159]"
           >
             <TrendingUp className="w-4 h-4 mr-2" />
             Review & Update Goals
           </Button>
+          
+          {/* Add from Goal Bank Dialog */}
           <Dialog
             open={isAddingGoalFromBank}
-            onOpenChange={setIsAddingGoalFromBank}
+            onOpenChange={(open) => {
+              setIsAddingGoalFromBank(open);
+              if (!open) {
+                setSelectedBankGoal(null);
+                bankGoalFormik.resetForm();
+              }
+            }}
           >
             <DialogTrigger asChild>
               <Button className="bg-[#395159] hover:bg-[#303630] text-white">
@@ -300,7 +352,7 @@ export function GoalsSection({ clientId, clientGoals }: GoalsSectionProps) {
                   ))}
                 </div>
               ) : (
-                <form onSubmit={handleAddGoalFromBank} className="space-y-4">
+                <form onSubmit={bankGoalFormik.handleSubmit} className="space-y-4">
                   <div className="p-4 bg-[#efefef] rounded-lg border border-[#395159]">
                     <Badge className="bg-[#395159] text-white mb-2">
                       {selectedBankGoal.category}
@@ -317,49 +369,55 @@ export function GoalsSection({ clientId, clientGoals }: GoalsSectionProps) {
                     <Label htmlFor="editedGoalText">Edit Goal (Optional)</Label>
                     <Textarea
                       id="editedGoalText"
-                      value={editedGoalText}
-                      onChange={(e: any) => setEditedGoalText(e.target.value)}
+                      name="editedGoalText"
+                      value={bankGoalFormik.values.editedGoalText}
+                      onChange={bankGoalFormik.handleChange}
                       className="min-h-24"
                       placeholder="You can customize the goal text for this specific client..."
                     />
-                    <p className="text-sm text-[#395159]">
-                      The goal text can be edited to match this client's
-                      specific needs
-                    </p>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="goalTargetDate">Target Date</Label>
+                    <Label htmlFor="targetDate">Target Date</Label>
                     <Input
-                      id="goalTargetDate"
+                      id="targetDate"
+                      name="targetDate"
                       type="date"
-                      value={goalTargetDate}
-                      onChange={(e: any) => setGoalTargetDate(e.target.value)}
+                      value={bankGoalFormik.values.targetDate}
+                      onChange={bankGoalFormik.handleChange}
+                      onBlur={bankGoalFormik.handleBlur}
                       className="h-12"
-                      required
                     />
+                    {bankGoalFormik.touched.targetDate && bankGoalFormik.errors.targetDate && (
+                      <p className="text-sm text-red-600">
+                        {bankGoalFormik.errors.targetDate}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="baselineData">Baseline Percentage</Label>
+                    <Label htmlFor="baselinePercentage">Baseline Percentage</Label>
                     <div className="flex items-center gap-2">
                       <Input
-                        id="baselineData"
+                        id="baselinePercentage"
+                        name="baselinePercentage"
                         type="number"
                         min="0"
                         max="100"
-                        value={baselineData}
-                        onChange={(e: any) => setBaselineData(e.target.value)}
+                        value={bankGoalFormik.values.baselinePercentage}
+                        onChange={bankGoalFormik.handleChange}
+                        onBlur={bankGoalFormik.handleBlur}
                         className="h-12"
                         placeholder="0"
-                        required
                       />
                       <span className="text-[#395159]">%</span>
                     </div>
-                    <p className="text-sm text-[#395159]">
-                      Enter the client's current performance percentage for this
-                      goal (0-100%)
-                    </p>
+                    {bankGoalFormik.touched.baselinePercentage && 
+                     bankGoalFormik.errors.baselinePercentage && (
+                      <p className="text-sm text-red-600">
+                        {bankGoalFormik.errors.baselinePercentage}
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex gap-3 pt-4">
@@ -374,9 +432,7 @@ export function GoalsSection({ clientId, clientGoals }: GoalsSectionProps) {
                       variant="outline"
                       onClick={() => {
                         setSelectedBankGoal(null);
-                        setEditedGoalText("");
-                        setGoalTargetDate("");
-                        setBaselineData("0");
+                        bankGoalFormik.resetForm();
                       }}
                       className="h-12"
                     >
@@ -387,9 +443,14 @@ export function GoalsSection({ clientId, clientGoals }: GoalsSectionProps) {
               )}
             </DialogContent>
           </Dialog>
+
+          {/* Add Custom Goal Dialog */}
           <Dialog
             open={isAddingCustomGoal}
-            onOpenChange={setIsAddingCustomGoal}
+            onOpenChange={(open) => {
+              setIsAddingCustomGoal(open);
+              if (!open) customGoalFormik.resetForm();
+            }}
           >
             <DialogTrigger asChild>
               <Button
@@ -407,51 +468,57 @@ export function GoalsSection({ clientId, clientGoals }: GoalsSectionProps) {
                   Create a custom goal specifically for this client.
                 </DialogDescription>
               </DialogHeader>
-              <form onSubmit={handleAddCustomGoal} className="space-y-4">
+              <form onSubmit={customGoalFormik.handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <SelectBox
-                    htmlFor="customGoalCategory"
+                    htmlFor="category"
                     label="FEDC Category"
-                    value={customGoalCategory}
-                    onChange={setCustomGoalCategory}
+                    value={customGoalFormik.values.category}
+                    onChange={(value) => customGoalFormik.setFieldValue("category", value)}
                     options={GoalBankCategory}
-                    error={formErrors.category}
+                    error={
+                      customGoalFormik.touched.category
+                        ? customGoalFormik.errors.category
+                        : undefined
+                    }
                     placeholder="Select FEDC category"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="customGoalText">Goal Description</Label>
+                  <Label htmlFor="discription">Goal Description</Label>
                   <Textarea
-                    id="customGoalText"
-                    value={customGoalText}
-                    onChange={(e: any) => setCustomGoalText(e.target.value)}
+                    id="discription"
+                    name="discription"
+                    value={customGoalFormik.values.discription}
+                    onChange={customGoalFormik.handleChange}
+                    onBlur={customGoalFormik.handleBlur}
                     className="min-h-24"
                     placeholder="Enter the custom goal for this client..."
-                    required
                   />
-                  {formErrors.description && (
+                  {customGoalFormik.touched.discription && 
+                   customGoalFormik.errors.discription && (
                     <p className="text-sm text-red-600">
-                      {formErrors.description}
+                      {customGoalFormik.errors.discription}
                     </p>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="customGoalTargetDate">Target Date</Label>
+                  <Label htmlFor="customTargetDate">Target Date</Label>
                   <Input
-                    id="customGoalTargetDate"
+                    id="customTargetDate"
+                    name="targetDate"
                     type="date"
-                    value={customGoalTargetDate}
-                    onChange={(e: any) =>
-                      setCustomGoalTargetDate(e.target.value)
-                    }
+                    value={customGoalFormik.values.targetDate}
+                    onChange={customGoalFormik.handleChange}
+                    onBlur={customGoalFormik.handleBlur}
                     className="h-12"
-                    required
                   />
-                  {formErrors.targetDate && (
+                  {customGoalFormik.touched.targetDate && 
+                   customGoalFormik.errors.targetDate && (
                     <p className="text-sm text-red-600">
-                      {formErrors.targetDate}
+                      {customGoalFormik.errors.targetDate}
                     </p>
                   )}
                 </div>
@@ -461,106 +528,107 @@ export function GoalsSection({ clientId, clientGoals }: GoalsSectionProps) {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="customMasteryPercentage">
+                      <Label htmlFor="masteryPercentage">
                         Mastery Percentage
                       </Label>
                       <div className="flex items-center gap-2">
                         <Input
-                          id="customMasteryPercentage"
+                          id="masteryPercentage"
+                          name="masteryPercentage"
                           type="number"
-                          min="0"
+                          min="1"
                           max="100"
-                          value={customMasteryPercentage}
-                          onChange={(e: any) =>
-                            setCustomMasteryPercentage(e.target.value)
-                          }
+                          value={customGoalFormik.values.masteryPercentage}
+                          onChange={customGoalFormik.handleChange}
+                          onBlur={customGoalFormik.handleBlur}
                           className="h-12"
-                          required
                         />
-
                         <span className="text-[#395159]">%</span>
                       </div>
-                      {formErrors.masteryPercentage && (
+                      {customGoalFormik.touched.masteryPercentage && 
+                       customGoalFormik.errors.masteryPercentage && (
                         <p className="text-sm text-red-600">
-                          {formErrors.masteryPercentage}
+                          {customGoalFormik.errors.masteryPercentage}
                         </p>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="customMasterySessionCount">
-                        Across Sessions
-                      </Label>
+                      <Label htmlFor="acrossSession">Across Sessions</Label>
                       <Input
-                        id="customMasterySessionCount"
+                        id="acrossSession"
+                        name="acrossSession"
                         type="number"
                         min="1"
-                        value={customMasterySessionCount}
-                        onChange={(e: any) =>
-                          setCustomMasterySessionCount(e.target.value)
-                        }
+                        value={customGoalFormik.values.acrossSession}
+                        onChange={customGoalFormik.handleChange}
+                        onBlur={customGoalFormik.handleBlur}
                         className="h-12"
-                        required
                       />
-                      {formErrors.sessionCount && (
+                      {customGoalFormik.touched.acrossSession && 
+                       customGoalFormik.errors.acrossSession && (
                         <p className="text-sm text-red-600">
-                          {formErrors.sessionCount}
+                          {customGoalFormik.errors.acrossSession}
                         </p>
                       )}
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="customSupportLevel">
+                    <Label htmlFor="supportLevel">
                       Support Level Required for Mastery
                     </Label>
                     <Select
-                      value={customSupportLevel}
-                      onValueChange={setCustomSupportLevel}
-                      required
+                      value={customGoalFormik.values.supportLevel}
+                      onValueChange={(value) =>
+                        customGoalFormik.setFieldValue("supportLevel", value)
+                      }
                     >
                       <SelectTrigger className="h-12">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value={SupportLevel?.Independent}>
-                          Independently
-                        </SelectItem>
-                        <SelectItem value={SupportLevel?.Minimal}>
-                          Minimal Support
-                        </SelectItem>
-                        <SelectItem value={SupportLevel?.Moderate}>
-                          Moderate Support
-                        </SelectItem>
+                        {SupportLevelOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
+                    {customGoalFormik.touched.supportLevel && 
+                     customGoalFormik.errors.supportLevel && (
+                      <p className="text-sm text-red-600">
+                        {customGoalFormik.errors.supportLevel}
+                      </p>
+                    )}
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="customBaselineData">
+                  <Label htmlFor="customBaselinePercentage">
                     Baseline Percentage
                   </Label>
                   <div className="flex items-center gap-2">
                     <Input
-                      id="customBaselineData"
+                      id="customBaselinePercentage"
+                      name="baselinePercentage"
                       type="number"
                       min="0"
                       max="100"
-                      value={customBaselineData}
-                      onChange={(e: any) =>
-                        setCustomBaselineData(e.target.value)
-                      }
+                      value={customGoalFormik.values.baselinePercentage}
+                      onChange={customGoalFormik.handleChange}
+                      onBlur={customGoalFormik.handleBlur}
                       className="h-12"
                       placeholder="0"
-                      required
                     />
                     <span className="text-[#395159]">%</span>
                   </div>
-                  <p className="text-sm text-[#395159]">
-                    Enter the client's current performance percentage for this
-                    goal (0-100%)
-                  </p>
+                  {customGoalFormik.touched.baselinePercentage && 
+                   customGoalFormik.errors.baselinePercentage && (
+                    <p className="text-sm text-red-600">
+                      {customGoalFormik.errors.baselinePercentage}
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex gap-3 pt-4">
@@ -585,6 +653,7 @@ export function GoalsSection({ clientId, clientGoals }: GoalsSectionProps) {
         </div>
       </div>
 
+      {/* Goals List */}
       <div className="space-y-3">
         {clientGoals?.map((item: any) => (
           <div
@@ -597,7 +666,6 @@ export function GoalsSection({ clientId, clientGoals }: GoalsSectionProps) {
                   <Badge className="bg-[#395159] text-white">
                     {item?.goal?.category}
                   </Badge>
-
                   {item?.targetDate && (
                     <Badge
                       variant="outline"
@@ -608,17 +676,12 @@ export function GoalsSection({ clientId, clientGoals }: GoalsSectionProps) {
                     </Badge>
                   )}
                 </div>
-
-                {/* ✅ goal description */}
                 <p className="text-[#303630] mb-2">
                   {item.customDescription || item.goal?.discription}
                 </p>
-
-                {/* optional info */}
                 <p className="text-sm text-[#395159]">
                   Baseline: {item.baselinePercentage}%
                 </p>
-
                 <div className="flex gap-3 mt-3">
                   <Button
                     size="sm"
@@ -629,7 +692,6 @@ export function GoalsSection({ clientId, clientGoals }: GoalsSectionProps) {
                     <Edit className="w-4 h-4 mr-1" />
                     Edit Goal
                   </Button>
-
                   <Button
                     size="sm"
                     variant="outline"
@@ -647,7 +709,16 @@ export function GoalsSection({ clientId, clientGoals }: GoalsSectionProps) {
       </div>
 
       {/* Edit Goal Dialog */}
-      <Dialog open={isEditingGoal} onOpenChange={setIsEditingGoal}>
+      <Dialog
+        open={isEditingGoal}
+        onOpenChange={(open) => {
+          setIsEditingGoal(open);
+          if (!open) {
+            setEditingGoalId(null);
+            editGoalFormik.resetForm();
+          }
+        }}
+      >
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>Edit Goal</DialogTitle>
@@ -655,11 +726,11 @@ export function GoalsSection({ clientId, clientGoals }: GoalsSectionProps) {
               Modify the goal details and settings.
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleEditGoal} className="space-y-4">
+          <form onSubmit={editGoalFormik.handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="editGoalCategory">FEDC Category</Label>
               <Input
-                value={editGoalCategory}
+                value={editGoalFormik.values.category}
                 disabled
                 className="h-12 bg-gray-100 cursor-not-allowed"
               />
@@ -668,49 +739,54 @@ export function GoalsSection({ clientId, clientGoals }: GoalsSectionProps) {
             <div className="space-y-2">
               <Label htmlFor="editGoalText">Goal Description</Label>
               <Input
-                value={editGoalText}
+                value={editGoalFormik.values.discription}
                 disabled
                 className="h-12 bg-gray-100 cursor-not-allowed"
               />
-              {/* <Textarea
-                id="editGoalText"
-                value={editGoalText}
-                onChange={(e: any) => setEditGoalText(e.target.value)}
-                className="min-h-24"
-                required
-              /> */}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="editGoalTargetDate">Target Date</Label>
+              <Label htmlFor="editTargetDate">Target Date</Label>
               <Input
-                id="editGoalTargetDate"
+                id="editTargetDate"
+                name="targetDate"
                 type="date"
-                value={editGoalTargetDate}
-                onChange={(e: any) => setEditGoalTargetDate(e.target.value)}
+                value={editGoalFormik.values.targetDate}
+                onChange={editGoalFormik.handleChange}
+                onBlur={editGoalFormik.handleBlur}
                 className="h-12"
               />
+              {editGoalFormik.touched.targetDate && 
+               editGoalFormik.errors.targetDate && (
+                <p className="text-sm text-red-600">
+                  {editGoalFormik.errors.targetDate}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="editGoalBaseline">Baseline Percentage</Label>
+              <Label htmlFor="editBaselinePercentage">Baseline Percentage</Label>
               <div className="flex items-center gap-2">
                 <Input
-                  id="editGoalBaseline"
+                  id="editBaselinePercentage"
+                  name="baselinePercentage"
                   type="number"
                   min="0"
                   max="100"
-                  value={editGoalBaseline}
-                  onChange={(e: any) => setEditGoalBaseline(e.target.value)}
+                  value={editGoalFormik.values.baselinePercentage}
+                  onChange={editGoalFormik.handleChange}
+                  onBlur={editGoalFormik.handleBlur}
                   className="h-12"
                   placeholder="0"
                 />
                 <span className="text-[#395159]">%</span>
               </div>
-              <p className="text-sm text-[#395159]">
-                Enter the client's baseline performance percentage for this goal
-                (0-100%)
-              </p>
+              {editGoalFormik.touched.baselinePercentage && 
+               editGoalFormik.errors.baselinePercentage && (
+                <p className="text-sm text-red-600">
+                  {editGoalFormik.errors.baselinePercentage}
+                </p>
+              )}
             </div>
 
             <div className="flex gap-3 pt-4">
@@ -734,7 +810,16 @@ export function GoalsSection({ clientId, clientGoals }: GoalsSectionProps) {
       </Dialog>
 
       {/* Modify Criteria Dialog */}
-      <Dialog open={isModifyingCriteria} onOpenChange={setIsModifyingCriteria}>
+      <Dialog
+        open={isModifyingCriteria}
+        onOpenChange={(open) => {
+          setIsModifyingCriteria(open);
+          if (!open) {
+            setModifyingGoalId(null);
+            modifyCriteriaFormik.resetForm();
+          }
+        }}
+      >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Modify Goal Mastery Criteria</DialogTitle>
@@ -742,7 +827,7 @@ export function GoalsSection({ clientId, clientGoals }: GoalsSectionProps) {
               Update the mastery criteria for this goal.
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleModifyCriteria} className="space-y-4">
+          <form onSubmit={modifyCriteriaFormik.handleSubmit} className="space-y-4">
             <div className="p-4 bg-[#efefef] rounded-lg border border-[#ccc9c0]">
               <p className="text-sm text-[#395159] mb-2">Current Goal:</p>
               {modifyingGoalId && (
@@ -774,48 +859,47 @@ export function GoalsSection({ clientId, clientGoals }: GoalsSectionProps) {
                     Mastery Percentage
                   </Label>
                   <div className="flex items-center gap-2">
-                    {/* <Input
+                    <Input
                       id="criteriaMasteryPercentage"
+                      name="masteryPercentage"
                       type="number"
                       min="0"
                       max="100"
-                      value={criteriaMasteryPercentage}
-                      onChange={(e: any) =>
-                        setCriteriaMasteryPercentage(e.target.value)
-                      }
+                      value={modifyCriteriaFormik.values.masteryPercentage}
+                      onChange={modifyCriteriaFormik.handleChange}
+                      onBlur={modifyCriteriaFormik.handleBlur}
                       className="h-12"
-                      required
-                    /> */}
-
-                    <Input
-                      value={criteriaMasteryPercentage}
-                      disabled
-                      className="h-12 bg-gray-100 cursor-not-allowed"
                     />
                     <span className="text-[#395159]">%</span>
                   </div>
+                  {modifyCriteriaFormik.touched.masteryPercentage && 
+                   modifyCriteriaFormik.errors.masteryPercentage && (
+                    <p className="text-sm text-red-600">
+                      {modifyCriteriaFormik.errors.masteryPercentage}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="criteriaMasterySessionCount">
+                  <Label htmlFor="criteriaSessionCount">
                     Consecutive Sessions
                   </Label>
-                  {/* <Input
-                    id="criteriaMasterySessionCount"
+                  <Input
+                    id="criteriaSessionCount"
+                    name="sessionCount"
                     type="number"
                     min="1"
-                    value={criteriaMasterySessionCount}
-                    onChange={(e: any) =>
-                      setCriteriaMasterySessionCount(e.target.value)
-                    }
+                    value={modifyCriteriaFormik.values.sessionCount}
+                    onChange={modifyCriteriaFormik.handleChange}
+                    onBlur={modifyCriteriaFormik.handleBlur}
                     className="h-12"
-                    required
-                  /> */}
-                  <Input
-                    value={criteriaMasterySessionCount}
-                    disabled
-                    className="h-12 bg-gray-100 cursor-not-allowed"
                   />
+                  {modifyCriteriaFormik.touched.sessionCount && 
+                   modifyCriteriaFormik.errors.sessionCount && (
+                    <p className="text-sm text-red-600">
+                      {modifyCriteriaFormik.errors.sessionCount}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -823,15 +907,11 @@ export function GoalsSection({ clientId, clientGoals }: GoalsSectionProps) {
                 <Label htmlFor="criteriaSupportLevel">
                   Support Level Required for Mastery
                 </Label>
-                <Input
-                  value={criteriaSupportLevel}
-                  disabled
-                  className="h-12 bg-gray-100 cursor-not-allowed"
-                />
-                {/* <Select
-                  value={criteriaSupportLevel}
-                  onValueChange={setCriteriaSupportLevel}
-                  required
+                <Select
+                  value={modifyCriteriaFormik.values.supportLevel}
+                  onValueChange={(value) =>
+                    modifyCriteriaFormik.setFieldValue("supportLevel", value)
+                  }
                 >
                   <SelectTrigger className="h-12">
                     <SelectValue />
@@ -847,16 +927,22 @@ export function GoalsSection({ clientId, clientGoals }: GoalsSectionProps) {
                       Moderate Support
                     </SelectItem>
                   </SelectContent>
-                </Select> */}
+                </Select>
+                {modifyCriteriaFormik.touched.supportLevel && 
+                 modifyCriteriaFormik.errors.supportLevel && (
+                  <p className="text-sm text-red-600">
+                    {modifyCriteriaFormik.errors.supportLevel}
+                  </p>
+                )}
               </div>
 
               <div className="mt-4 p-3 bg-white rounded border border-blue-200">
                 <p className="text-sm text-[#395159]">
                   <strong>Criteria Summary:</strong> Goal will be considered
                   mastered when the client demonstrates the skill at{" "}
-                  {criteriaMasteryPercentage}% accuracy across{" "}
-                  {criteriaMasterySessionCount} consecutive sessions with{" "}
-                  {criteriaSupportLevel} support.
+                  {modifyCriteriaFormik.values.masteryPercentage}% accuracy across{" "}
+                  {modifyCriteriaFormik.values.sessionCount} consecutive sessions with{" "}
+                  {modifyCriteriaFormik.values.supportLevel} support.
                 </p>
               </div>
             </div>

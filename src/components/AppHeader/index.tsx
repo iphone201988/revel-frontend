@@ -20,6 +20,7 @@ export function AppHeader() {
 
     const handleLogout = async()=>{
      await logout().unwrap().catch((error)=> handleError(error))
+     localStorage.clear()
      showSuccess('Logout Successfully')
      navigate('/login')
     }

@@ -19,11 +19,8 @@ import {
   permissionCategories,
 } from "../../../../../utils/helper";
 
-
-
 import type { ProviderPermissions } from "../../../../../Types/types";
 import { showError } from "../../../../../components/CustomToast";
-
 
 export function ProviderPermissionsScreen() {
   const location = useLocation();
@@ -32,8 +29,6 @@ export function ProviderPermissionsScreen() {
     null
   );
   const provider = location.state.provider;
-
-  
 
   const { data } = useViewPermissionsQuery(provider._id, {
     skip: !provider?._id,
@@ -94,9 +89,9 @@ export function ProviderPermissionsScreen() {
       await updatePermissions({
         providerId: providerData._id,
         permissions: permissionsArray,
-      }).unwrap().catch((error)=> handleError(error));
-
-      
+      })
+        .unwrap()
+        .catch((error) => handleError(error));
     } catch (error: any) {
       showError(error?.data?.message || "Failed to update permissions");
     }
@@ -203,7 +198,9 @@ export function ProviderPermissionsScreen() {
                     </div>
                     <Switch
                       id={`${provider._id}-${permission.key}`}
-                     checked={providerData?.permissions[permission.key] ?? false}
+                      checked={
+                        providerData?.permissions[permission.key] ?? false
+                      }
                       onCheckedChange={() =>
                         handlePermissionToggle(permission.key)
                       }

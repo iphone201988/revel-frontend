@@ -113,15 +113,15 @@ useEffect(() => {
  const getActionBadge = (action: string) => {
   const actionMap: Record<string, { label: string; color: string }> = {
     // AUTH
-    "Provider Login": { label: "Provider Login", color: "bg-blue-500" },
-    "Provider Logout": { label: "Provider Logout", color: "bg-gray-500" },
+    "Login": { label: "Login", color: "bg-blue-500" },
+    "Logout": { label: "Logout", color: "bg-gray-500" },
     "Send Otp": { label: "Send OTP", color: "bg-indigo-500" },
     "Verify Otp": { label: "Verify OTP", color: "bg-indigo-600" },
     "Set Password": { label: "Set Password", color: "bg-purple-500" },
 
     // PROVIDER
     "View Provider Profile": { label: "View Provider Profile", color: "bg-green-500" },
-    "View Providers": { label: "View Providers", color: "bg-green-500" },
+    "View Providers": { label: "View Providers", color: "bg-blue-500" },
     "Create Provider": { label: "Create Provider", color: "bg-emerald-500" },
     "Update Provider": { label: "Update Provider", color: "bg-yellow-500" },
     "View Permission": { label: "View Permission", color: "bg-indigo-500" },
@@ -139,7 +139,7 @@ useEffect(() => {
     "Add Client Goal": { label: "Add Client Goal", color: "bg-emerald-500" },
 
     // SESSION
-    "Start Session": { label: "Start Session", color: "bg-blue-500" },
+    "Start Session": { label: "Start Session", color: "bg-red-500" },
     "View Sessions": { label: "View Sessions", color: "bg-green-500" },
     "Generate Notes": { label: "Generate Notes", color: "bg-purple-500" },
 
@@ -195,7 +195,7 @@ useEffect(() => {
       <div className="max-w-screen-2xl mx-auto px-6 py-8">
         <div className="flex items-center justify-between mb-6">
           <Button
-            onClick={() => navigate("/admin")}
+            onClick={() => navigate(-1)}
             variant="outline"
             className="border-[#395159] text-[#395159]"
           >

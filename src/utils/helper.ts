@@ -35,6 +35,7 @@ export const PERMISSION_MAP = {
 
   accessAdminPanel: "AccessAdmin",
   manageProviders: "ManageProviders",
+  qspSignatureRequired: "QspSignatureRequired",
   managePermissions: "ManagePermissions",
 } as const;
 
@@ -121,6 +122,11 @@ export const permissionCategories: {
         label: "Edit Narrative Reports",
         description: "Edit progress reports",
       },
+      {
+        key:"qspSignatureRequired",
+        label:'QSP Signature Required',
+        description:"Required QSP Signature"
+      }
     ],
   },
   {
@@ -231,3 +237,23 @@ export const isAtLeast16YearsOld = (dob?: string) => {
 };
 
 
+export type UrgencyLevel = 'normal' | 'warning' | 'critical';
+
+export function getDaysPassed(date: string | Date): number {
+  if (!date) return 0;
+
+  const reportDate = new Date(date);
+  const today = new Date();
+
+  reportDate.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+
+  const diff = today.getTime() - reportDate.getTime();
+  return diff > 0 ? Math.floor(diff / (1000 * 60 * 60 * 24)) : 0;
+}
+
+export function getUrgencyLevel(days: number): UrgencyLevel {
+  if (days >= 5) return 'critical';
+  if (days >= 3) return 'warning';
+  return 'normal';
+}

@@ -5,6 +5,7 @@ import { Badge } from "../../../../components/Badge";
 
 import { useNavigate } from "react-router-dom";
 import { useViewAuditsQuery } from "../../../../redux/api/provider";
+import moment from "moment";
 
 
 
@@ -101,7 +102,7 @@ export function AuditSummary() {
                     {log.action} • {log.resource}
                   </p>
                 </div>
-                <span className="text-sm text-[#395159]">{log.time}</span>
+                <span className="text-sm text-[#395159]">{moment(log?.createdAt).format('hh:mm A')}</span>
               </div>
             </div>
           ))}

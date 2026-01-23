@@ -13,13 +13,16 @@ import {
   Save,
   FileSignature,
   Download,
+  AlertCircle,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   useDownloadSessionNotesMutation,
   useGenerateNotesMutation,
+  useGetOrgnaizationQuery,
   useGetUserProfileQuery,
+  useSaveReportMutation,
 } from "../../../redux/api/provider";
 import { useEffect, useState } from "react";
 import moment from "moment";
@@ -28,44 +31,26 @@ import { FullScreenLoader } from "./Loader";
 import { showSuccess } from "../../../components/CustomToast";
 
 export function NoteEditorCard({ onGenerate }: any) {
-  const [hasEdited, setHasEdited] = useState(true);
+  const [hasEdited, setHasEdited] = useState(false);
   const [isSigned, setIsSigned] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   const [sessionOverview, setSessionOverview] = useState("");
   const [treatmentChanges, setTreatmentChanges] = useState("");
   const [clinicalRecommendations, setClinicalRecommendations] = useState("");
   const [clientVariables, setClientVariables] = useState("");
   const [signatureError, setSignatureError] = useState("");
-
   const [providerObservation, setProviderObservations] = useState("");
-
   const [signature, setSignature] = useState("");
 
-  const onEditNote = () => {
-    setIsEditing(true);
-    setHasEdited(false);
-  };
-
-  const onSaveEdits = () => {
-    setHasEdited(true);
-    setIsEditing(false);
-  };
-  const onSignNote = () => {
-    if (!signature.trim()) {
-      setSignatureError("Signature is required.");
-      return;
-    }
-    setIsSigned(true);
-    setIsEditing(false);
-  };
-
+  const { data: orgnaizationData } = useGetOrgnaizationQuery();
   const { data: currentUser } = useGetUserProfileQuery();
+  const { data: profile } = useGetUserProfileQuery();
+  
+  const qspSignatureRequired = profile?.data?.permissions?.includes("QspSignatureRequired");
 
   const location = useLocation();
   const collectedSessionData = location?.state?.sessionData;
-
-  console.log(collectedSessionData, "collected session data");
-
   const navigate = useNavigate();
 
   const [generateNotes, { data: notes, isSuccess, isLoading }] =
@@ -73,12 +58,9 @@ export function NoteEditorCard({ onGenerate }: any) {
 
   const [downloadSessionNotes, { isLoading: isDownloading }] =
     useDownloadSessionNotesMutation();
-  console.log(notes?.data, " ai reponse ");
 
   const aiData = notes?.data?.soapNote;
-
   const sessionData = collectedSessionData?.sessionData;
-
   const sessionId = collectedSessionData?.collectedData?.sessionId;
 
   useEffect(() => {
@@ -99,6 +81,31 @@ export function NoteEditorCard({ onGenerate }: any) {
     }
   }, [isSuccess]);
 
+  const onEditNote = () => {
+    setIsEditing(true);
+    setHasEdited(true);
+  };
+
+  const onSaveEdits = () => {
+    setIsEditing(false);
+    setIsSaved(true);
+  };
+
+  const onSignNote = async () => {
+    if (!isSaved) {
+      setSignatureError("Please save the note before signing.");
+      toast.error("Please click 'Save Edits' before signing.");
+      return;
+    }
+
+    if (!signature.trim()) {
+      setSignatureError("Signature is required.");
+      return;
+    }
+
+    await handleSaveReportWithSignature();
+  };
+
   const getSupportLevel = (performance: any) => {
     const indie = performance.independent?.count || 0;
     const minimal = performance.minimal_support?.count || 0;
@@ -117,9 +124,8 @@ export function NoteEditorCard({ onGenerate }: any) {
   }) {
     const independent = supportLevels.independent || {};
     const minimal = supportLevels.minimal || {};
-    const moderate = supportLevels.modrate || {}; // typo handled
+    const moderate = supportLevels.modrate || {};
 
-    // Totals
     const totalSuccess =
       (independent.success || 0) +
       (minimal.success || 0) +
@@ -135,15 +141,6 @@ export function NoteEditorCard({ onGenerate }: any) {
       totalTrials,
       totalMiss,
     };
-  }
-  if (isLoading) {
-    return (
-      <>
-        {isLoading && (
-          <FullScreenLoader text="AI is generating the clinical note..." />
-        )}
-      </>
-    );
   }
 
   const onDownloadPDF = async (fileName: string) => {
@@ -201,8 +198,13 @@ export function NoteEditorCard({ onGenerate }: any) {
         collectedSessionData?.collectedData?.goals_dataCollection || []
       ).map((goal: any) => {
         const stats = calculateSupportStats(goal?.supportLevel || {});
+        const independentData = goal?.performance?.independent || goal?.supportLevel?.independent || {};
+        const minimalData = goal?.performance?.minimal_support || goal?.supportLevel?.minimal || {};
+        const moderateData = goal?.performance?.moderate_support || goal?.supportLevel?.modrate || {};
+
         return {
-          fedcCategory: goal?.fedc_category,
+          description: goal?.goal_name || goal?.goalId?.discription,
+          fedcCategory: goal?.fedc_category || goal?.goalId?.category,
           accuracy: goal?.totals?.overall_accuracy_percent || goal?.accuracy,
           totalTrials: goal?.totals?.total_trials || goal?.total,
           supportLevel: goal?.performance
@@ -210,6 +212,23 @@ export function NoteEditorCard({ onGenerate }: any) {
             : getSupportLevel(goal?.supportLevel),
           success: stats.totalSuccess,
           miss: stats.totalMiss,
+          supportLevelDetails: {
+            independent: independentData?.count > 0 ? {
+              count: independentData.count || 0,
+              success: independentData.success || 0,
+              percent: independentData.success_percent || Math.round(((independentData.success || 0) / (independentData.count || 1)) * 100)
+            } : null,
+            minimal: minimalData?.count > 0 ? {
+              count: minimalData.count || 0,
+              success: minimalData.success || 0,
+              percent: minimalData.success_percent || Math.round(((minimalData.success || 0) / (minimalData.count || 1)) * 100)
+            } : null,
+            moderate: moderateData?.count > 0 ? {
+              count: moderateData.count || 0,
+              success: moderateData.success || 0,
+              percent: moderateData.success_percent || Math.round(((moderateData.success || 0) / (moderateData.count || 1)) * 100)
+            } : null,
+          },
         };
       }),
 
@@ -219,6 +238,100 @@ export function NoteEditorCard({ onGenerate }: any) {
       },
     };
   };
+
+  const buildSaveReportPayload = () => {
+    const status = qspSignatureRequired ? "PENDING_QSP_SIGNATURE" : "SIGNED";
+    
+    return {
+      subjective: sessionOverview,
+
+      client: {
+        name: sessionData?.client?.name,
+        dob: sessionData?.client?.dob,
+      },
+
+      provider: {
+        name: currentUser?.data?.name,
+        credentail: currentUser?.data?.credential,
+      },
+
+      session: {
+        startTime: sessionData?.startTime,
+        endTime: sessionData?.endTime,
+      },
+
+      date: new Date(),
+
+      totalDuration: Math.floor(
+        (collectedSessionData?.collectedData?.duration || 0) / 60
+      ),
+
+      clientVariables,
+
+      session_context: sessionOverview,
+      observations: providerObservation,
+
+      supportObserved:
+        aiData?.soap_note?.objective?.data_and_progress?.strategies_implemented || [],
+      activities:
+        aiData?.soap_note?.objective?.data_and_progress?.activities || [],
+
+      assessment: treatmentChanges,
+      plan: clinicalRecommendations,
+
+      signature: signature,
+      status: status,
+
+      orgnaizationId: orgnaizationData?.data?._id,
+
+      goals: (
+        collectedSessionData?.collectedData?.goals_dataCollection || []
+      ).map((goal: any) => {
+        const stats = calculateSupportStats(goal?.supportLevel || {});
+        return {
+          description: goal?.goal_name,
+          accuracy: goal?.totals?.overall_accuracy_percent || goal?.accuracy,
+          performance: `${goal?.totals?.total_trials || goal?.total} trials`,
+          supportLevel: goal?.performance
+            ? getSupportLevel(goal?.performance)
+            : getSupportLevel(goal?.supportLevel),
+          progressSummery: `Accuracy ${goal?.accuracy}%`,
+          successfull: stats.totalSuccess,
+          missed: stats.totalMiss,
+        };
+      }),
+    };
+  };
+
+  const [saveReport,{ isSuccess: isReportSaved } ] = useSaveReportMutation();
+
+  const handleSaveReportWithSignature = async () => {
+    const payload = buildSaveReportPayload();
+    
+    await saveReport(payload)
+      .unwrap()
+      .then(() => {
+        setIsSigned(true);
+        setIsEditing(false);
+        
+        if (qspSignatureRequired) {
+          showSuccess("Note has been sent to QSP for signature");
+        } else {
+          showSuccess("Report saved and signed successfully");
+        }
+      })
+      .catch((error: any) => handleError(error));
+  };
+
+  if (isLoading) {
+    return (
+      <>
+        {isLoading && (
+          <FullScreenLoader text="AI is generating the clinical note..." />
+        )}
+      </>
+    );
+  }
 
   return (
     <Card className="p-6 bg-white">
@@ -231,6 +344,12 @@ export function NoteEditorCard({ onGenerate }: any) {
               Edited
             </Badge>
           )}
+          {isSaved && !isSigned && (
+            <Badge className="bg-green-500 text-white">
+              <Save className="w-3 h-3 mr-1" />
+              Saved
+            </Badge>
+          )}
         </div>
         <div className="flex items-center gap-2 text-sm text-[#395159]">
           <Lock className="w-4 h-4" />
@@ -238,12 +357,13 @@ export function NoteEditorCard({ onGenerate }: any) {
         </div>
       </div>
 
-      {!isSigned && !isEditing && (
+      {/* Blue Banner - Initial Review */}
+      {!isSigned && !isEditing && !isSaved && (
         <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
           <div className="flex items-center justify-between">
             <p className="text-sm text-blue-800">
               <strong>Review the note carefully.</strong> You can edit any
-              section before signing.
+              section before saving and signing.
             </p>
             <Button
               onClick={onEditNote}
@@ -258,12 +378,13 @@ export function NoteEditorCard({ onGenerate }: any) {
         </div>
       )}
 
+      {/* Orange Banner - Editing Mode */}
       {isEditing && !isSigned && (
         <div className="mb-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
           <div className="flex items-center justify-between">
             <p className="text-sm text-orange-800">
               <strong>Editing Mode:</strong> Make changes to the note below,
-              then save your edits.
+              then save your edits before signing.
             </p>
             <Button
               onClick={onSaveEdits}
@@ -272,6 +393,27 @@ export function NoteEditorCard({ onGenerate }: any) {
             >
               <Save className="w-4 h-4 mr-1" />
               Save Edits
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Green Banner - Saved Successfully */}
+      {isSaved && !isSigned && !isEditing && (
+        <div className="mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-green-800">
+              <strong>Note Saved Successfully.</strong> You can now sign the
+              note below or edit again if needed.
+            </p>
+            <Button
+              onClick={onEditNote}
+              variant="outline"
+              size="sm"
+              className="border-green-600 text-green-700 hover:bg-green-100"
+            >
+              <Edit className="w-4 h-4 mr-1" />
+              Edit Again
             </Button>
           </div>
         </div>
@@ -287,7 +429,9 @@ export function NoteEditorCard({ onGenerate }: any) {
         {/* Document Header */}
         <div className="bg-white p-6 rounded-lg border border-[#ccc9c0]">
           <div className="text-center border-b border-[#ccc9c0] pb-4 mb-4">
-            <h2 className="text-[#303630] text-2xl mb-2">DIR DataFlow</h2>
+            <h2 className="text-[#303630] text-2xl mb-2">
+              {orgnaizationData?.data?.clinicName}
+            </h2>
             <p className="text-[#395159]">Session Note</p>
             <p className="text-sm text-[#395159] mt-1">
               Treatment Plan Development and Progress Monitoring
@@ -345,7 +489,6 @@ export function NoteEditorCard({ onGenerate }: any) {
             <div>
               <Label className="text-xs text-[#395159]">Session End Time</Label>
               <p className="text-[#303630]">
-                {" "}
                 {moment(sessionData?.endTime).format("hh:mm A") || "N/A"}
               </p>
             </div>
@@ -408,6 +551,7 @@ export function NoteEditorCard({ onGenerate }: any) {
                   }}
                   className="mt-1"
                   rows={2}
+                  disabled={isSigned}
                 />
               </div>
             ) : (
@@ -446,6 +590,7 @@ export function NoteEditorCard({ onGenerate }: any) {
                   className="mt-1"
                   rows={4}
                   placeholder="Describe the session overview..."
+                  disabled={isSigned}
                 />
               ) : (
                 <p className="text-[#303630] text-sm leading-relaxed">
@@ -465,7 +610,8 @@ export function NoteEditorCard({ onGenerate }: any) {
                   }}
                   className="mt-1"
                   rows={5}
-                  placeholder="Describe the detailedd observation..."
+                  placeholder="Describe the detailed observation..."
+                  disabled={isSigned}
                 />
               ) : (
                 <p className="text-[#303630] text-sm leading-relaxed">
@@ -485,8 +631,8 @@ export function NoteEditorCard({ onGenerate }: any) {
                     (
                       aiData?.soap_note?.objective?.data_and_progress?.goals ||
                       []
-                    ).map((fedc: any) => (
-                      <Badge key={fedc} className="bg-[#395159] text-white">
+                    ).map((fedc: any, idx: number) => (
+                      <Badge key={idx} className="bg-[#395159] text-white">
                         {fedc?.fedc_level}
                       </Badge>
                     ))
@@ -499,7 +645,7 @@ export function NoteEditorCard({ onGenerate }: any) {
                   <p className="text-[#303630] text-sm">
                     {
                       collectedSessionData?.collectedData?.goals_dataCollection
-                        .length
+                        ?.length
                     }{" "}
                     FEDC levels observed and addressed during session
                   </p>
@@ -510,91 +656,209 @@ export function NoteEditorCard({ onGenerate }: any) {
         </div>
 
         {/* ITP Goal Progress */}
-        {false
-          ? aiData?.soap_note?.objective?.data_and_progress?.goals
-          : collectedSessionData?.collectedData?.goals_dataCollection?.map(
-              (goal: any, index: number) => {
-                return (
-                  <div
-                    key={index}
-                    className="bg-white p-6 rounded-lg border border-[#ccc9c0]"
+        {(aiData?.soap_note?.objective?.data_and_progress?.goals ||
+          collectedSessionData?.collectedData?.goals_dataCollection)?.map(
+          (goal: any, index: number) => {
+            const stats = calculateSupportStats(
+              goal?.supportLevel || goal?.performance || {}
+            );
+            const accuracy =
+              goal?.totals?.overall_accuracy_percent || goal?.accuracy || 0;
+            const totalTrials =
+              goal?.totals?.total_trials || goal?.total || stats.totalTrials;
+            const goalDescription =
+              goal?.goal_name || goal?.goalId?.discription || "";
+            const fedcCategory =
+              goal?.fedc_level ||
+              goal?.fedc_category ||
+              goal?.goalId?.category ||
+              "";
+
+            const independentData =
+              goal?.performance?.independent || goal?.supportLevel?.independent || {};
+            const minimalData =
+              goal?.performance?.minimal_support ||
+              goal?.supportLevel?.minimal ||
+              {};
+            const moderateData =
+              goal?.performance?.moderate_support ||
+              goal?.supportLevel?.modrate ||
+              {};
+
+            return (
+              <div
+                key={index}
+                className="bg-white p-6 rounded-lg border border-[#ccc9c0]"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <h4 className="text-[#303630] font-semibold">
+                    ITP Goal {index + 1}
+                  </h4>
+                  <Badge
+                    className={`${
+                      accuracy >= 80
+                        ? "bg-green-600"
+                        : accuracy >= 60
+                        ? "bg-yellow-600"
+                        : "bg-orange-600"
+                    } text-white`}
                   >
-                    <div className="flex items-start justify-between mb-3">
-                      <h4 className="text-[#303630]">ITP Goal {index + 1}</h4>
+                    {accuracy}% Accuracy
+                  </Badge>
+                </div>
+                <Separator className="mb-4 bg-[#ccc9c0]" />
+
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-sm text-[#395159] font-semibold">
+                      Goal Description
+                    </Label>
+                    <p className="text-[#303630] mt-1">{goalDescription}</p>
+                  </div>
+
+                  {fedcCategory && (
+                    <div>
+                      <Label className="text-sm text-[#395159] font-semibold">
+                        FEDC Category
+                      </Label>
+                      <p className="text-[#303630] mt-1">{fedcCategory}</p>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm text-[#395159] font-semibold">
+                        Performance
+                      </Label>
+                      <p className="text-[#303630] mt-1">
+                        {accuracy}% accuracy across {totalTrials} opportunities
+                      </p>
+                    </div>
+
+                    <div>
+                      <Label className="text-sm text-[#395159] font-semibold">
+                        Support Level Required
+                      </Label>
                       <Badge
-                        className={`${
-                          goal?.totals?.overall_accuracy_percent ||
-                          goal?.accuracy >= 80
-                            ? "bg-green-600"
-                            : goal?.totals?.overall_accuracy_percent ||
-                              goal?.accuracy >= 60
-                            ? "bg-yellow-600"
-                            : "bg-orange-600"
-                        } text-white`}
+                        variant="outline"
+                        className="border-[#395159] text-[#395159] mt-1"
                       >
-                        {goal?.totals?.overall_accuracy_percent ||
-                          goal?.accuracy}
-                        % Accuracy
+                        {goal?.performance
+                          ? getSupportLevel(goal?.performance)
+                          : getSupportLevel(goal?.supportLevel)}
                       </Badge>
                     </div>
-                    <Separator className="mb-4 bg-[#ccc9c0]" />
+                  </div>
 
-                    <div className="space-y-3">
-                      <div>
-                        <Label className="text-sm text-[#395159]">
-                          Goal Description
-                        </Label>
-                        <p className="text-[#303630]">{goal?.fedc_category}</p>
-                      </div>
+                  <div>
+                    <Label className="text-sm text-[#395159] font-semibold">
+                      Opportunities
+                    </Label>
+                    <p className="text-sm text-[#303630] mt-1">
+                      Successful: {stats.totalSuccess} • Missed:{" "}
+                      {stats.totalMiss}
+                    </p>
+                  </div>
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label className="text-sm text-[#395159]">
-                            Performance
-                          </Label>
-                          <p className="text-[#303630]">
-                            {goal?.totals?.overall_accuracy_percent ||
-                              goal?.accuracy}
-                            % accuracy across{" "}
-                            {goal?.totals?.total_trials || goal?.total}{" "}
-                            opportunities
-                          </p>
+                  <div>
+                    <Label className="text-sm text-[#395159] font-semibold mb-2 block">
+                      Performance by Support Level
+                    </Label>
+                    <div className="space-y-2">
+                      {independentData?.count > 0 && (
+                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <span className="text-sm text-[#303630]">
+                            Independent
+                          </span>
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm text-[#303630]">
+                              {independentData.success || 0}/
+                              {independentData.count || 0}
+                            </span>
+                            <Badge
+                              variant="outline"
+                              className="border-[#395159] text-[#395159] min-w-[60px] justify-center"
+                            >
+                              {independentData.success_percent ||
+                                Math.round(
+                                  ((independentData.success || 0) /
+                                    (independentData.count || 1)) *
+                                    100
+                                )}
+                              %
+                            </Badge>
+                          </div>
                         </div>
+                      )}
 
-                        <div>
-                          <Label className="text-sm text-[#395159]">
-                            Support Level Required
-                          </Label>
-                          <Badge
-                            variant="outline"
-                            className="border-[#395159] text-[#395159]"
-                          >
-                            {goal?.performance
-                              ? getSupportLevel(goal?.performance)
-                              : getSupportLevel(goal?.supportLevel)}
-                          </Badge>
+                      {minimalData?.count > 0 && (
+                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <span className="text-sm text-[#303630]">
+                            Minimal Support
+                          </span>
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm text-[#303630]">
+                              {minimalData.success || 0}/{minimalData.count || 0}
+                            </span>
+                            <Badge
+                              variant="outline"
+                              className="border-[#395159] text-[#395159] min-w-[60px] justify-center"
+                            >
+                              {minimalData.success_percent ||
+                                Math.round(
+                                  ((minimalData.success || 0) /
+                                    (minimalData.count || 1)) *
+                                    100
+                                )}
+                              %
+                            </Badge>
+                          </div>
                         </div>
-                      </div>
+                      )}
 
-                      <div>
-                        <Label className="text-sm text-[#395159]">
-                          Opportunities
-                        </Label>
-                        <p className="text-sm text-[#303630]">
-                          Successful:{" "}
-                          {goal?.totals?.totalSuccess ||
-                            calculateSupportStats(goal?.supportLevel)
-                              .totalSuccess}{" "}
-                          • Missed:{" "}
-                          {goal?.totals?.total_miss ||
-                            calculateSupportStats(goal?.supportLevel).totalMiss}
-                        </p>
-                      </div>
+                      {moderateData?.count > 0 && (
+                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <span className="text-sm text-[#303630]">
+                            Moderate Support
+                          </span>
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm text-[#303630]">
+                              {moderateData.success || 0}/
+                              {moderateData.count || 0}
+                            </span>
+                            <Badge
+                              variant="outline"
+                              className="border-[#395159] text-[#395159] min-w-[60px] justify-center"
+                            >
+                              {moderateData.success_percent ||
+                                Math.round(
+                                  ((moderateData.success || 0) /
+                                    (moderateData.count || 1)) *
+                                    100
+                                )}
+                              %
+                            </Badge>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
-                );
-              }
-            )}
+
+                  {(goal?.engagement_summary || goal?.performance_summary) && (
+                    <div>
+                      <Label className="text-sm text-[#395159] font-semibold">
+                        Progress Summary
+                      </Label>
+                      <p className="text-sm text-[#303630] mt-1">
+                        {goal?.engagement_summary || goal?.performance_summary}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          }
+        )}
 
         {/* Treatment Changes Section */}
         <div className="bg-white p-6 rounded-lg border border-[#ccc9c0]">
@@ -612,6 +876,7 @@ export function NoteEditorCard({ onGenerate }: any) {
               rows={4}
               className="bg-white"
               placeholder="Document any changes to treatment or diagnosis..."
+              disabled={isSigned}
             />
           ) : (
             <p className="text-[#303630] text-sm whitespace-pre-wrap">
@@ -636,6 +901,7 @@ export function NoteEditorCard({ onGenerate }: any) {
               rows={5}
               className="bg-white"
               placeholder="Enter recommendations (one per line)..."
+              disabled={isSigned}
             />
           ) : (
             <ul className="list-disc list-inside text-sm text-[#303630] space-y-2">
@@ -652,9 +918,9 @@ export function NoteEditorCard({ onGenerate }: any) {
               Provider Signature
             </h3>
             {isSigned && (
-              <Badge className="bg-green-600 text-white">
+              <Badge className={`${qspSignatureRequired ? 'bg-orange-600' : 'bg-green-600'} text-white`}>
                 <CheckCircle2 className="w-4 h-4 mr-1" />
-                Signed
+                {qspSignatureRequired ? 'Awaiting QSP' : 'Signed'}
               </Badge>
             )}
           </div>
@@ -680,55 +946,58 @@ export function NoteEditorCard({ onGenerate }: any) {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="signature">Electronic Signature</Label>
-                <Input
-                  id="signature"
-                  value={signature}
-                  onChange={(e) => {
-                    setSignature(e.target.value);
-                    if (e.target.value.trim()) {
-                      setSignatureError("");
-                    }
-                  }}
-                  placeholder="Type your full name to sign"
-                  className={`h-12 ${signatureError ? "border-red-500" : ""}`}
-                />
+              {!isSaved && (
+                <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <p className="text-sm text-yellow-800 flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4" />
+                    Please save the note before signing.
+                  </p>
+                </div>
+              )}
 
-                {signatureError && (
-                  <p className="text-sm text-red-600 mt-1">{signatureError}</p>
-                )}
-              </div>
+              {isSaved && (
+                <>
+                  <Label htmlFor="signature">Electronic Signature</Label>
+                  <Input
+                    id="signature"
+                    value={signature}
+                    onChange={(e) => {
+                      setSignature(e.target.value);
+                      if (e.target.value.trim()) {
+                        setSignatureError("");
+                      }
+                    }}
+                    placeholder="Type your full name to sign"
+                    className={`h-12 ${signatureError ? "border-red-500" : ""}`}
+                  />
 
-              <div className="flex gap-3">
-                <Button
-                  onClick={onSignNote}
-                  className="flex-1 h-12 bg-[#395159] hover:bg-[#303630] text-white"
-                >
-                  Sign Note
-                </Button>
-                {isSigned && (
-                  <Button
-                    onClick={() => onDownloadPDF("Session Note")}
-                    variant="outline"
-                    className="flex-1 h-12 border-[#395159] text-[#395159]"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Download PDF
-                  </Button>
-                )}
-              </div>
+                  {signatureError && (
+                    <p className="text-sm text-red-600 mt-1">{signatureError}</p>
+                  )}
+
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={onSignNote}
+                      className="flex-1 h-12 bg-[#395159] hover:bg-[#303630] text-white"
+                    >
+                      Sign Note
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
           ) : (
-            <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-              <p className="text-sm text-green-800 flex items-center gap-2">
+            <div className={`p-4 rounded-lg border ${qspSignatureRequired ? 'bg-orange-50 border-orange-200' : 'bg-green-50 border-green-200'}`}>
+              <p className={`text-sm flex items-center gap-2 ${qspSignatureRequired ? 'text-orange-800' : 'text-green-800'}`}>
                 <CheckCircle2 className="w-4 h-4" />
                 Signed electronically by{" "}
                 {signature || currentUser?.data?.name || "Provider"} on{" "}
-                {moment().date()}
+                {moment().format("DD-MM-YYYY")}
+                {qspSignatureRequired && " - Pending QSP Signature"}
               </p>
-              <p className="text-xs text-[#395159] mt-2">
-                If you need to edit and re-sign, please request QSP approval.
+              <p className="text-xs text-[#395159] mt-2 flex items-center gap-1">
+                <Lock className="w-3 h-3" />
+                This note is now locked and cannot be edited. Contact your administrator if changes are needed.
               </p>
               <div className="flex gap-3 mt-4">
                 {isSigned && (
@@ -743,11 +1012,11 @@ export function NoteEditorCard({ onGenerate }: any) {
                 )}
                 <Button
                   onClick={() => {
-                   showSuccess("Sent to QSP for review"), navigate("/");
+                    navigate("/");
                   }}
                   className="flex-1 h-12 bg-[#395159] hover:bg-[#303630] text-white"
                 >
-                  Send to QSP for Review
+                  Return to Dashboard
                 </Button>
               </div>
             </div>

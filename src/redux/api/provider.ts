@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 const baseQuery = fetchBaseQuery({
   baseUrl: "http://localhost:2001/api",
-  // baseUrl: "https://03d8d4cea176.ngrok-free.app/api",
+  // baseUrl: "https://c4b864713032.ngrok-free.app/api",
   prepareHeaders: (headers) => {
     const auth = localStorage.getItem("token");
     headers.set("ngrok-skip-browser-warning", "69420");
@@ -13,6 +13,21 @@ const baseQuery = fetchBaseQuery({
     return headers;
   },
 });
+
+export const baseQueryWithAutoLogout:any = async (args:any, api:any, extraOptions:any) => {
+    const result = await baseQuery(args, api, extraOptions);
+ 
+    if (result.error && result.error.status === 401) {
+    
+      localStorage.removeItem("token");
+      api.dispatch({ type: "providerApi/resetApiState" });
+
+      // Optional: redirect to login
+      window.location.href = "/login";
+    }
+
+    return result;
+  };
 export interface ProviderResponse {
   success: boolean;
   message: string;
@@ -25,12 +40,14 @@ const GOAL_TAG = "GOAL";
 const PERMISSION_TAG = "PERMISSIONS";
 const ACTIVITY_TAG = "ACTIVITY";
 const SUPPORT_TAG = "SUPPORT";
-const UPDATE_STATUS_TAG= 'UPDATE_GOAL_STATUS'
-const ARCHIVED_TAG = 'ARCHIVED'
+const UPDATE_STATUS_TAG = "UPDATE_GOAL_STATUS";
+const ARCHIVED_TAG = "ARCHIVED";
 const AUDIT_TAG = "AUDIT";
+const REPORT_TAG="REPORT"
+
 export const providerApi = createApi({
   reducerPath: "providerApi",
-  baseQuery,
+  baseQuery: baseQueryWithAutoLogout,
   tagTypes: [
     AUDIT_TAG,
     USER_TAG,
@@ -40,6 +57,7 @@ export const providerApi = createApi({
     ACTIVITY_TAG,
     UPDATE_STATUS_TAG,
     ARCHIVED_TAG,
+    REPORT_TAG,
     SUPPORT_TAG,
   ],
   endpoints: (builder) => ({
@@ -48,6 +66,11 @@ export const providerApi = createApi({
         url: "/org/register",
         method: "POST",
         body,
+      }),
+    }),
+    getOrgnaization: builder.query<any, void>({
+      query: () => ({
+        url: "/org",
       }),
     }),
     providerLogin: builder.mutation({
@@ -99,6 +122,13 @@ export const providerApi = createApi({
         url: `/provider/clientProfile?clientId=${clientId}`,
       }),
       providesTags: [CLIENT_TAG],
+    }),
+    deleteClient : builder.mutation({
+      query:(clientId)=>({
+        url:`/provider/deleteClient?clientId=${clientId}`,
+        method:"DELETE"
+      }),
+      invalidatesTags:[CLIENT_TAG]
     }),
 
     addClient: builder.mutation({
@@ -313,7 +343,7 @@ export const providerApi = createApi({
       query: (clientId) => ({
         url: `/provider/archived?clientId=${clientId}`,
       }),
-      providesTags: [ARCHIVED_TAG]
+      providesTags: [ARCHIVED_TAG],
     }),
     progressReport: builder.query<any, any>({
       query: (clientId) => ({
@@ -324,7 +354,7 @@ export const providerApi = createApi({
       query: (clientId) => ({
         url: `/provider/goalProgress?clientId=${clientId}`,
       }),
-      providesTags:[UPDATE_STATUS_TAG]
+      providesTags: [UPDATE_STATUS_TAG],
     }),
 
     submitTicket: builder.mutation({
@@ -344,7 +374,22 @@ export const providerApi = createApi({
         },
       }),
     }),
+    getDraftReports: builder.query<any, void>({
+      query: () => ({
+        url: `/org/reports`,
+       
+      }),
+      providesTags:[REPORT_TAG]
+    }),
 
+ savePendingSign:builder.mutation({
+      query:(body)=>({
+        url:`/org/saveSign`,
+        method:"POST",
+        body
+      }),
+      invalidatesTags:[REPORT_TAG]
+ }),
     clientProgressReports: builder.query<
       any,
       { dateRange?: string; selectedClient?: string } | void
@@ -371,13 +416,21 @@ export const providerApi = createApi({
       }),
     }),
 
+    resendLink: builder.mutation({
+      query: (body) => ({
+        url: `/provider/sendLink`,
+        method: "POST",
+        body,
+      }),
+    }),
+
     // download apis
     donloadFedecDistribution: builder.mutation({
       query: (body) => ({
         url: "/download/fedec",
         method: "POST",
         body,
-        responseHandler: (response) => response.blob(),
+        responseHandler: (response:any) => response.blob(),
       }),
       invalidatesTags: [AUDIT_TAG],
     }),
@@ -386,7 +439,7 @@ export const providerApi = createApi({
         url: "/download/sessionTrends",
         method: "POST",
         body,
-        responseHandler: (response) => response.blob(),
+        responseHandler: (response:any) => response.blob(),
       }),
       invalidatesTags: [AUDIT_TAG],
     }),
@@ -395,7 +448,7 @@ export const providerApi = createApi({
         url: "/download/breakDown",
         method: "POST",
         body,
-        responseHandler: (response) => response.blob(),
+        responseHandler: (response:any) => response.blob(),
       }),
       invalidatesTags: [AUDIT_TAG],
     }),
@@ -405,7 +458,7 @@ export const providerApi = createApi({
         url: "/download/goalReview",
         method: "POST",
         body,
-        responseHandler: (response) => response.blob(),
+        responseHandler: (response:any) => response.blob(),
       }),
       invalidatesTags: [AUDIT_TAG],
     }),
@@ -414,7 +467,7 @@ export const providerApi = createApi({
         url: "/download/sessionNote",
         method: "POST",
         body,
-        responseHandler: (response) => response.blob(),
+        responseHandler: (response:any) => response.blob(),
       }),
       invalidatesTags: [AUDIT_TAG],
     }),
@@ -423,7 +476,7 @@ export const providerApi = createApi({
         url: "/download/audits",
         method: "POST",
         body,
-        responseHandler: (response) => response.blob(),
+        responseHandler: (response:any) => response.blob(),
       }),
       invalidatesTags: [AUDIT_TAG],
     }),
@@ -432,7 +485,7 @@ export const providerApi = createApi({
       query: (goalBankId) => ({
         url: `/download/session?goalBankId=${goalBankId}`,
         method: "POST",
-        responseHandler: (response) => response.blob(),
+        responseHandler: (response:any) => response.blob(),
       }),
       invalidatesTags: [AUDIT_TAG],
     }),
@@ -442,18 +495,26 @@ export const providerApi = createApi({
         url: `/download/selectedSession`,
         method: "POST",
         body,
-        responseHandler: (response) => response.blob(),
+        responseHandler: (response:any) => response.blob(),
       }),
       invalidatesTags: [AUDIT_TAG],
     }),
-   
-     updateGoalStatus: builder.mutation({
-      query: ({ clientId, goalId, status , reason}) => ({
+
+    updateGoalStatus: builder.mutation({
+      query: ({ clientId, goalId, status, reason }) => ({
         url: "/provider/updateStatus",
         method: "PUT",
-        body: { clientId, goalId, status , reason},
-      }),  
-      invalidatesTags: [UPDATE_STATUS_TAG, CLIENT_TAG, ARCHIVED_TAG]
+        body: { clientId, goalId, status, reason },
+      }),
+      invalidatesTags: [UPDATE_STATUS_TAG, CLIENT_TAG, ARCHIVED_TAG],
+    }),
+
+    saveReport: builder.mutation({
+      query: (body) => ({
+        url: "/session/saveReport",
+        method: "POST",
+        body,
+      }),
     }),
   }),
 });
@@ -508,5 +569,11 @@ export const {
   useDownloadAuditlogsMutation,
   useDownloadSessionHistoryMutation,
   useDownloadSelectedSessionMutation,
-  useUpdateGoalStatusMutation
+  useUpdateGoalStatusMutation,
+  useResendLinkMutation,
+  useGetOrgnaizationQuery,
+  useSaveReportMutation,
+  useGetDraftReportsQuery,
+  useSavePendingSignMutation,
+  useDeleteClientMutation
 } = providerApi;

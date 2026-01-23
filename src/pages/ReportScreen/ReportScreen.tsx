@@ -191,6 +191,9 @@ export function ReportsScreen() {
     }
   }, [overviewError]);
 
+  const hasFedcData = fedcDistribution.some(
+    (item: any) => Number(item.value) > 0
+  );
   return (
     <div className="min-h-screen bg-[#efefef]">
       <AppHeader />
@@ -223,7 +226,7 @@ export function ReportsScreen() {
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <Label>Date Range</Label>
+              <Label className="ml-3">Date Range</Label>
               <Select value={dateRange} onValueChange={setDateRange}>
                 <SelectTrigger className="h-12">
                   <SelectValue />
@@ -239,7 +242,7 @@ export function ReportsScreen() {
             </div>
 
             <div>
-              <Label>Provider</Label>
+              <Label  className="ml-3">Provider</Label>
               <Select
                 value={selectedProvider}
                 onValueChange={setSelectedProvider}
@@ -259,7 +262,7 @@ export function ReportsScreen() {
             </div>
 
             <div>
-              <Label>Client</Label>
+              <Label  className="ml-3">Client</Label>
               <Select value={selectedClient} onValueChange={setSelectedClient}>
                 <SelectTrigger className="h-12">
                   <SelectValue />
@@ -284,15 +287,27 @@ export function ReportsScreen() {
         )}
 
         <Tabs defaultValue="overview">
-          <TabsList className="grid grid-cols-3 gap-4 mb-6">
-            <TabsTrigger value="overview">
-              <BarChart3 className="w-4 h-4 mr-2" /> Overview
+          <TabsList className="grid grid-cols-3 gap-4 p-1 bg-[#ccc9c0] rounded-lg mb-6">
+            <TabsTrigger
+              value="overview"
+              className="data-[state=active]:bg-[#395159] data-[state=active]:text-white"
+            >
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Overview
             </TabsTrigger>
-            <TabsTrigger value="clients">
-              <Users className="w-4 h-4 mr-2" /> Clients
+            <TabsTrigger
+              value="clients"
+              className="data-[state=active]:bg-[#395159] data-[state=active]:text-white"
+            >
+              <Users className="w-4 h-4 mr-2" />
+              Client Reports
             </TabsTrigger>
-            <TabsTrigger value="providers">
-              <FileText className="w-4 h-4 mr-2" /> Providers
+            <TabsTrigger
+              value="providers"
+              className="data-[state=active]:bg-[#395159] data-[state=active]:text-white"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              Provider Reports
             </TabsTrigger>
           </TabsList>
 
@@ -353,25 +368,30 @@ export function ReportsScreen() {
                     {isLoading ? "Exporting..." : "PDF"}
                   </Button>
                 </div>
-                <ResponsiveContainer width="100%" height={200}>
-                  <PieChart>
-                    <Pie
-                      data={fedcDistribution}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={(entry) => `${entry?.name}: ${entry.value}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {fedcDistribution.map((entry: any, index: number) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+                {hasFedcData ? (
+                  <ResponsiveContainer width="100%" height={200}>
+                    <PieChart>
+                      <Pie
+                        data={fedcDistribution}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={(entry) => `${entry.name}: ${entry.value}%`}
+                        outerRadius={80}
+                        dataKey="value"
+                      >
+                        {fedcDistribution.map((entry: any, index: number) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <p className="text-center text-sm text-gray-500 mt-4">
+                    No Data Found
+                  </p>
+                )}
               </Card>
             </div>
 
@@ -462,7 +482,7 @@ export function ReportsScreen() {
                       <TableCell>{c?.completedGoals}</TableCell>
                       <TableCell>{c?.sessionsThisMonth}</TableCell>
                       <TableCell>
-                        <Badge>{c?.avgFEDC ?? "N/A"}</Badge>
+                        <Badge className="bg-[#395159] text-white px-4 py-1">{c?.avgFEDC ?? "N/A"}</Badge>
                       </TableCell>
                     </TableRow>
                   ))}

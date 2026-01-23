@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from "react";
 import {
   useGetAssignedClientsQuery,
+  useGetDraftReportsQuery,
   useGetUserProfileQuery,
 } from "../../redux/api/provider";
 import { Button } from "../../components/Button";
@@ -11,13 +12,17 @@ import { AppHeader } from "../../components/AppHeader";
 import { useNavigate } from "react-router-dom";
 import { ReviewAlertBanner } from "./components/ReviewAlertBanner";
 import { usePermission } from "../../utils/usePermission";
+import { QSPAlertBanner } from "./components/QspAlertBanner";
+import { SystemRoles } from "../../utils/enums/enum";
+import { getDaysPassed, getUrgencyLevel, PERMISSION_MAP } from "../../utils/helper";
 
 const Dashboard = () => {
   const onNavigate = useNavigate();
   const { data }: any = useGetUserProfileQuery();
   const { hasPermission } = usePermission();
 
-  useEffect(() => { }, [data]);
+  useEffect(() => {}, [data]);
+  const { data: draftNotes }: any = useGetDraftReportsQuery();
 
   const { data: clients }: any = useGetAssignedClientsQuery();
 
@@ -52,7 +57,32 @@ const Dashboard = () => {
       .filter(Boolean)
       .sort((a: any, b: any) => a.daysUntilReview - b.daysUntilReview);
   }, [clients?.data]);
+  const isQSP=
+    data?.data?.systemRole === SystemRoles[1] 
+    const isAdmin = data?.data?.systemRole === SystemRoles[2];
 
+  const qspAlertData = useMemo(() => {
+    if (!Array.isArray(draftNotes?.data)) {
+      return { criticalCount: 0, warningCount: 0, totalPending: 0 };
+    }
+
+    let criticalCount = 0;
+    let warningCount = 0;
+
+    draftNotes.data.forEach((report: any) => {
+      const days = getDaysPassed(report?.date);
+      const urgency = getUrgencyLevel(days);
+
+      if (urgency === "critical") criticalCount++;
+      if (urgency === "warning") warningCount++;
+    });
+
+    return {
+      criticalCount,
+      warningCount,
+      totalPending: draftNotes.data.length,
+    };
+  }, [draftNotes?.data]);
   return (
     <div>
       <div className="min-h-screen bg-[#efefef]">
@@ -67,12 +97,22 @@ const Dashboard = () => {
           </div>
 
           {/* Review Alerts */}
-          <ReviewAlertBanner
-            alerts={reviewAlerts}
-            onClientClick={(clientId) =>
-              onNavigate("/client", { state: { clientId: clientId } })
-            }
-          />
+          {isQSP &&  (
+            <ReviewAlertBanner
+              alerts={reviewAlerts}
+              onClientClick={(clientId) =>
+                onNavigate("/client", { state: { clientId: clientId } })
+              }
+            />
+          )}
+
+          {/* QSP Signature Alert - Shows for QSPs and Admins with pending signatures */}
+          {isQSP && qspAlertData.totalPending > 0 && (
+            <QSPAlertBanner
+              alert={qspAlertData}
+              onReviewClick={() => onNavigate("/qspSignature")}
+            />
+          )}
 
           {/* Quick Actions */}
           <div className="mb-8">

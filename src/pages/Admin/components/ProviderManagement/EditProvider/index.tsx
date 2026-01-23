@@ -44,11 +44,15 @@ import { Badge } from "../../../../../components/Badge";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { SystemRoles } from "../../../../../utils/enums/enum";
-import { useUpdateProviderMutation } from "../../../../../redux/api/provider";
+
+import {
+  useResendLinkMutation,
+  useUpdateProviderMutation,
+} from "../../../../../redux/api/provider";
 import { handleError } from "../../../../../utils/helper";
 import { addProviderSchema } from "../../../../../Schema";
 import { showSuccess } from "../../../../../components/CustomToast";
+import PhoneInput, { type CountryData } from "react-phone-input-2";
 
 export function ProviderEditScreen() {
   const navigate = useNavigate();
@@ -68,6 +72,7 @@ export function ProviderEditScreen() {
       clinicRole: provider?.clinicRole || "",
       systemRole: provider?.systemRole || "",
       email: provider?.email || "",
+      countryCode: provider?.countryCode || "",
       phone: provider?.phone || "",
 
       // fields that were in your UI but NOT in backend
@@ -147,6 +152,17 @@ export function ProviderEditScreen() {
   //   formik.values.clinicRole.toLowerCase().includes("level 1") ||
   //   formik.values.clinicRole.toLowerCase().includes("level 2");
 
+  const [resendLink, { isSuccess: isLinkSent, isLoading }] =
+    useResendLinkMutation();
+  useEffect(() => {
+    if (isLinkSent) {
+      showSuccess("Account setup link has been sent to Provider email");
+    }
+  }, [isLinkSent]);
+
+  const handleResendLink = () => {
+    resendLink({ providerId: provider?._id });
+  };
   return (
     <div className="min-h-screen bg-[#efefef]">
       <AppHeader />
@@ -168,16 +184,32 @@ export function ProviderEditScreen() {
             </div>
             <div>
               <h2 className="text-[#303630]">Edit Provider</h2>
-              <p className="text-[#395159]">{formik.values.name}</p>
+              <p className="text-[#395159]">
+                {formik.values.name} |{" "}
+                {formik.values.systemRole === "1"
+                  ? "Super Admin"
+                  : formik.values.systemRole === "2"
+                  ? "Admin"
+                  : "User"}
+              </p>
             </div>
           </div>
-          <Badge className="bg-[#395159] text-white px-4 py-2">
+          {/* <Badge className="bg-[#395159] text-white px-4 py-2">
             {formik.values.systemRole === "1"
               ? "Super Admin"
               : formik.values.systemRole === "2"
               ? "Admin"
               : "User"}
-          </Badge>
+          </Badge> */}
+          <button disabled={isLoading} onClick={handleResendLink}>
+            <Badge
+              className={`px-4 py-2 text-white ${
+                isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-[#395159]"
+              }`}
+            >
+              {isLoading ? "Sending..." : "Resend Link"}
+            </Badge>
+          </button>
         </div>
 
         <Tabs defaultValue="information" className="w-full">
@@ -190,7 +222,7 @@ export function ProviderEditScreen() {
               Provider Information
             </TabsTrigger> */}
 
-            {/* <TabsTrigger
+          {/* <TabsTrigger
               value="password"
               className="data-[state=active]:bg-[#395159] data-[state=active]:text-white"
             >
@@ -224,6 +256,12 @@ export function ProviderEditScreen() {
                       onChange={formik.handleChange}
                       className="h-12"
                     />
+                    {formik.touched.name &&
+                      typeof formik.errors.name === "string" && (
+                        <span className="text-red-500">
+                          {formik.errors.name}
+                        </span>
+                      )}
                   </div>
 
                   <div className="space-y-2">
@@ -234,6 +272,12 @@ export function ProviderEditScreen() {
                       onChange={formik.handleChange}
                       className="h-12"
                     />
+                    {formik.touched.credential &&
+                      typeof formik.errors.credential === "string" && (
+                        <span className="text-red-500">
+                          {formik.errors.credential}
+                        </span>
+                      )}
                   </div>
                 </div>
 
@@ -247,6 +291,12 @@ export function ProviderEditScreen() {
                       onChange={formik.handleChange}
                       className="h-12"
                     />
+                    {formik.touched.clinicRole &&
+                      typeof formik.errors.clinicRole === "string" && (
+                        <span className="text-red-500">
+                          {formik.errors.clinicRole}
+                        </span>
+                      )}
                   </div>
 
                   <div className="space-y-2">
@@ -254,7 +304,7 @@ export function ProviderEditScreen() {
                     <Select
                       value={formik.values.systemRole.toString()}
                       onValueChange={(v) =>
-                        formik.setFieldValue("systemRole", Number(v))
+                        formik.setFieldValue("systemRole", v)
                       }
                     >
                       <SelectTrigger className="h-12">
@@ -262,12 +312,18 @@ export function ProviderEditScreen() {
                       </SelectTrigger>
 
                       <SelectContent>
-                        <SelectItem value="1">{SystemRoles[1]}</SelectItem>
-                        <SelectItem value="2">{SystemRoles[2]}</SelectItem>
-                        <SelectItem value="3">{SystemRoles[3]}</SelectItem>
+                        <SelectItem value="1">Super Admin</SelectItem>
+                        <SelectItem value="2">Admin</SelectItem>
+                        <SelectItem value="3">User</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
+                  {formik.touched.systemRole &&
+                    typeof formik.errors.systemRole === "string" && (
+                      <span className="text-red-500">
+                        {formik.errors.systemRole}
+                      </span>
+                    )}
                 </div>
 
                 {/* SUPERVISOR only if Level */}
@@ -302,21 +358,40 @@ export function ProviderEditScreen() {
                     <Input
                       type="email"
                       name="email"
-                       disabled
+                      disabled
                       value={formik.values.email}
                       onChange={formik.handleChange}
                       className="h-12"
                     />
+                    {formik.touched.email &&
+                      typeof formik.errors.email === "string" && (
+                        <span className="text-red-500">
+                          {formik.errors.email}
+                        </span>
+                      )}
                   </div>
 
                   <div className="space-y-2">
                     <Label>Phone</Label>
-                    <Input
-                      name="phone"
-                      value={formik.values.phone}
-                      onChange={formik.handleChange}
-                      className="h-12"
+                    <PhoneInput
+                      country="in"
+                      enableSearch
+                      value={`${formik.values.countryCode}${formik.values.phone}`}
+                      onChange={(value: string, data: CountryData) => {
+                        const dialCode = `+${data?.dialCode}`;
+                        const localNumber = value.replace(data?.dialCode, "");
+
+                        formik.setFieldValue("countryCode", dialCode);
+                        formik.setFieldValue("phone", localNumber);
+                      }}
+                      placeholder="(555) 123-4567"
                     />
+                      {formik.touched.phone &&
+                      typeof formik.errors.phone === "string" && (
+                        <span className="text-red-500">
+                          {formik.errors.phone}
+                        </span>
+                      )}
                   </div>
                 </div>
 
@@ -329,6 +404,12 @@ export function ProviderEditScreen() {
                     onChange={formik.handleChange}
                     className="h-12"
                   />
+                    {formik.touched.licenseNumber &&
+                      typeof formik.errors.licenseNumber === "string" && (
+                        <span className="text-red-500">
+                          {formik.errors.licenseNumber}
+                        </span>
+                      )}
                 </div>
 
                 {/* SAVE BUTTONS */}

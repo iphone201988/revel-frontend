@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useFormik } from "formik";
 
-import { UserPlus, X, Search, ChevronDown } from "lucide-react";
+import { UserPlus, X, Search, ChevronDown, Trash2, Edit3 } from "lucide-react";
 import { Button } from "../../../components/Button";
 import { Card } from "../../../components/Card";
 import { Input } from "../../../components/Input";
@@ -39,6 +39,7 @@ import {
 
 import {
   useAddClientMutation,
+  useDeleteClientMutation,
   useGetAllClientsQuery,
   useGetProvidersQuery,
 } from "../../../redux/api/provider";
@@ -47,6 +48,7 @@ import { clientSchema } from "../../../Schema";
 import EditClientDialog from "./EditClient/EditClient";
 import { handleError } from "../../../utils/helper";
 import { showSuccess } from "../../../components/CustomToast";
+import ConfirmDeleteDialog from "../../../components/ConfirmDeleteModel/Modal";
 
 export function ClientManagement() {
   const [providerSearchOpen, setProviderSearchOpen] = useState(false);
@@ -54,16 +56,29 @@ export function ClientManagement() {
 
   const [editClientOpen, setEditClientOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<any>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [clientToDelete, setClientToDelete] = useState<any>(null);
 
   const { data: clients }: any = useGetAllClientsQuery();
   const { data: providers }: any = useGetProvidersQuery();
   const [addClient, { data, isSuccess }] = useAddClientMutation();
+  const [deleteClient, { isSuccess: isDeleted }] = useDeleteClientMutation();
 
   useEffect(() => {
     if (isSuccess) {
       showSuccess("Client added successfully.");
     }
   }, [data]);
+
+  const handleDeleteClient = () => {
+    deleteClient(clientToDelete);
+  };
+
+  useEffect(() => {
+    if (isDeleted) {
+      showSuccess("Client Deleted Successfully..");
+    }
+  }, [isDeleted]);
 
   const formik = useFormik({
     initialValues: {
@@ -111,6 +126,18 @@ export function ClientManagement() {
   const errorText = (field: keyof typeof formik.values) =>
     formik.errors[field] as string | undefined;
 
+  const handleEditClient = (client: any) => {
+    setSelectedClient(client);
+    setEditClientOpen(true);
+  };
+
+  const handleDeleteClick = (client: any) => {
+    console.log(client);
+    
+    setClientToDelete(client);
+    setShowDeleteConfirm(true);
+  };
+
   return (
     <>
       <h2 className="text-[#303630] mb-6">Administration</h2>
@@ -153,7 +180,6 @@ export function ClientManagement() {
                     value={formik.values.name}
                     onChange={formik.handleChange}
                   />
-
                   {errorText("name") && (
                     <p className="text-sm text-red-600">{errorText("name")}</p>
                   )}
@@ -168,7 +194,6 @@ export function ClientManagement() {
                     value={formik.values.dob}
                     onChange={formik.handleChange}
                   />
-
                   {errorText("dob") && (
                     <p className="text-sm text-red-600">{errorText("dob")}</p>
                   )}
@@ -179,11 +204,10 @@ export function ClientManagement() {
                   <Input
                     id="diagnosis"
                     name="diagnosis"
-                    placeholder="Primary diagonis"
+                    placeholder="Primary diagnosis"
                     value={formik.values.diagnosis}
                     onChange={formik.handleChange}
                   />
-
                   {errorText("diagnosis") && (
                     <p className="text-sm text-red-600">
                       {errorText("diagnosis")}
@@ -192,7 +216,7 @@ export function ClientManagement() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="parentGuardian">Parent/Guardian Name</Label>
+                  <Label htmlFor="parentName">Parent/Guardian Name</Label>
                   <Input
                     id="parentName"
                     name="parentName"
@@ -200,7 +224,6 @@ export function ClientManagement() {
                     value={formik.values.parentName}
                     onChange={formik.handleChange}
                   />
-
                   {errorText("parentName") && (
                     <p className="text-sm text-red-600">
                       {errorText("parentName")}
@@ -218,18 +241,17 @@ export function ClientManagement() {
                     value={formik.values.email}
                     onChange={formik.handleChange}
                   />
-
                   {errorText("email") && (
                     <p className="text-sm text-red-600">{errorText("email")}</p>
                   )}
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="phone">Contact Phone</Label>
-
                   <PhoneInput
                     country="in"
                     enableSearch
-                    value={formik.values.phone} //  FULL NUMBER ONLY
+                    value={formik.values.phone}
                     onChange={(value, data) => {
                       if (
                         data &&
@@ -240,7 +262,7 @@ export function ClientManagement() {
                           "countryCode",
                           `+${data.dialCode}`
                         );
-                        formik.setFieldValue("phone", value); //  store full value
+                        formik.setFieldValue("phone", value);
                       }
                     }}
                     onBlur={() => {
@@ -248,7 +270,6 @@ export function ClientManagement() {
                     }}
                     placeholder="(555) 123-4567"
                   />
-
                   {errorText("phone") && (
                     <p className="text-sm text-red-600">{errorText("phone")}</p>
                   )}
@@ -292,13 +313,13 @@ export function ClientManagement() {
                           <CommandEmpty>No provider found.</CommandEmpty>
                           <CommandGroup>
                             {providers?.data
-                              .filter(
+                              ?.filter(
                                 (p: any) =>
                                   !formik.values.assignedProvider.includes(
                                     p._id
                                   )
                               )
-                              .map((provider: any) => (
+                              ?.map((provider: any) => (
                                 <CommandItem
                                   key={provider._id}
                                   value={provider.name}
@@ -362,7 +383,6 @@ export function ClientManagement() {
                     <SelectTrigger className="h-12">
                       <SelectValue placeholder="Select QSP" />
                     </SelectTrigger>
-
                     <SelectContent>
                       {providers?.data?.map((p: any) => (
                         <SelectItem key={p._id} value={p._id}>
@@ -386,7 +406,6 @@ export function ClientManagement() {
                     <SelectTrigger className="h-12">
                       <SelectValue placeholder="Select Clinical Supervisor" />
                     </SelectTrigger>
-
                     <SelectContent>
                       {providers?.data?.map((p: any) => (
                         <SelectItem key={p._id} value={p._id}>
@@ -406,15 +425,13 @@ export function ClientManagement() {
                     value={formik.values.reviewDate}
                     onChange={formik.handleChange}
                   />
-                  |{" "}
                   {errorText("reviewDate") && (
                     <p className="text-sm text-red-600">
                       {errorText("reviewDate")}
                     </p>
                   )}
                   <p className="text-sm text-[#395159]">
-                    ITP review date - alerts will appear at 60 and 30 days
-                    before
+                    ITP review date - alerts will appear at 60 and 30 days before
                   </p>
                 </div>
 
@@ -433,45 +450,63 @@ export function ClientManagement() {
       <Card className="p-6 bg-white">
         <h3 className="text-[#303630] mb-6">Current Clients</h3>
         <div className="space-y-3">
-          {clients?.data.map((client: any, index: number): any => (
+          {clients?.data?.map((client: any, index: number) => (
             <div
-              key={index}
+              key={client._id || index}
               className="p-4 bg-[#efefef] rounded-lg border border-[#ccc9c0]"
             >
               <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-[#303630]">{client.name}</p>
+                <div className="flex-1">
+                  <p className="text-[#303630] font-medium">{client.name}</p>
                   <div className="flex gap-4 mt-1 text-sm text-[#395159]">
                     <span>DOB: {moment(client.dob).format("DD-MM-YYYY")}</span>
                     <span>Dx: {client.diagnosis}</span>
                   </div>
                   <div className="mt-2">
                     <span className="px-2 py-1 bg-white text-[#395159] text-xs rounded border border-[#ccc9c0]">
-                      Provider: {client.qsp?.name}
+                      Provider: {client.qsp?.name || "Not assigned"}
                     </span>
                   </div>
                 </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="border-[#395159] text-[#395159]"
-                  onClick={() => {
-                    setSelectedClient(client);
-                    setEditClientOpen(true);
-                  }}
-                >
-                  Edit
-                </Button>
+                <div className="flex gap-2 ml-4 flex-shrink-0">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-[#395159] text-[#395159] h-9 px-3"
+                    onClick={() => handleEditClient(client)}
+                  >
+                    <Edit3 className="w-4 h-4 mr-1" />
+                    Edit
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-red-500 text-red-500 hover:bg-red-50 h-9 px-3"
+                    onClick={() => handleDeleteClick(client._id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           ))}
         </div>
       </Card>
+
       {selectedClient && (
         <EditClientDialog
           open={editClientOpen}
           onOpenChange={setEditClientOpen}
           client={selectedClient}
+        />
+      )}
+
+      {clientToDelete && (
+        <ConfirmDeleteDialog
+          open={showDeleteConfirm}
+          onOpenChange={setShowDeleteConfirm}
+          onConfirm={handleDeleteClient}
+          clientName={selectedClient?.name}
         />
       )}
     </>

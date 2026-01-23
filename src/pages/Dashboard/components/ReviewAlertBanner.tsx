@@ -19,8 +19,8 @@ export function ReviewAlertBanner({ alerts, onClientClick }: ReviewAlertBannerPr
   if (alerts.length === 0) return null;
 
   // Separate urgent (30 days or less) and upcoming (60 days or less) alerts
-  const urgentAlerts = alerts.filter(a => a.daysUntilReview <=5);
-  const upcomingAlerts = alerts.filter(a => a.daysUntilReview > 5 && a.daysUntilReview <= 20);
+  const urgentAlerts = alerts.filter(a => a.daysUntilReview <=30);
+  const upcomingAlerts = alerts.filter(a => a.daysUntilReview > 30 && a.daysUntilReview <= 45);
 
   return (
     <div className="space-y-3 mb-6">

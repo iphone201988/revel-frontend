@@ -34,10 +34,13 @@ import { SelectBox } from "../../../components/SelectBox";
 import { goalSchema } from "../../../Schema";
 import EditGoalPopup from "./EditGoal/EditGoal";
 import { showSuccess } from "../../../components/CustomToast";
+import { ConfirmDeleteGoalDialog } from "../../../components/ConfirmDeleteModel/Modal";
 
 export function GoalBankManagement() {
   const [editingGoal, setEditingGoal] = useState<any | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [goalToDelete, setGoalToDelete] = useState(null)
   const [addGoal, { data, isSuccess }] = useAddGoalMutation();
 
   const { data: goals } = useGetGoalsQuery();
@@ -79,9 +82,14 @@ export function GoalBankManagement() {
   });
 
   const [deleteGoal] = useDeleteGoalMutation();
+const handleDeleteClick =async(goalId:any)=>{
+  setGoalToDelete(goalId)
+  setShowDeleteConfirm(true)
+}
 
-  const handleDeleteGoal = async (goalId: any) => {
-    await deleteGoal(goalId)
+
+  const handleDeleteGoal = async () => {
+    await deleteGoal(goalToDelete)
       .unwrap()
       .catch((error) => handleError(error));
    showSuccess("Goal deleted Successfully");
@@ -341,7 +349,7 @@ export function GoalBankManagement() {
                         size="sm"
                         variant="outline"
                         className="border-red-500 text-red-500 hover:bg-red-50"
-                        onClick={() => handleDeleteGoal(goal?._id)}
+                        onClick={() => handleDeleteClick(goal?._id)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -360,6 +368,15 @@ export function GoalBankManagement() {
     goal={editingGoal}
   />
 )}
+
+ {goalToDelete && 
+ <ConfirmDeleteGoalDialog
+  open={showDeleteConfirm}
+  onOpenChange={setShowDeleteConfirm}
+  goalName={editingGoal?.name}
+  onConfirm={handleDeleteGoal}
+/>}
+
 
     </>
   );

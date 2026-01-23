@@ -26,7 +26,11 @@ import {
 } from "../../../redux/api/provider";
 import { SupportLevel, type SupportLevelType } from "../../../utils/enums/enum";
 import { handleError } from "../../../utils/helper";
-import { showError, showInfo, showSuccess } from "../../../components/CustomToast";
+import {
+  showError,
+  showInfo,
+  showSuccess,
+} from "../../../components/CustomToast";
 
 export function SessionDataCollectionScreen() {
   const location = useLocation();
@@ -251,8 +255,8 @@ export function SessionDataCollectionScreen() {
         },
       };
     });
+    setShowSupportSelector(null); // 👈 Close the support level dialog
   };
-
   /* -------------------- REMOVE / RE-ADD GOALS -------------------- */
 
   const removeGoal = (goalId: string) => {
@@ -295,7 +299,7 @@ export function SessionDataCollectionScreen() {
   const handleCompleteSession = async () => {
     try {
       if (!sessionInitData?._id) {
-       showError("Session ID missing");
+        showError("Session ID missing");
         return;
       }
 
@@ -320,6 +324,9 @@ export function SessionDataCollectionScreen() {
               minimal: state.supportLevelCounts.minimal,
               modrate: state.supportLevelCounts.moderate,
             },
+            masteryPercentage: "",
+            sessionCount: "",
+            masterySupportLevel: "",
 
             time: new Date(),
           };
@@ -338,7 +345,7 @@ export function SessionDataCollectionScreen() {
         .catch((error) => handleError(error));
     } catch (err: any) {
       console.error(err);
-     showError(err?.data?.message || "Failed to collect session data");
+      showError(err?.data?.message || "Failed to collect session data");
     }
   };
 
@@ -524,6 +531,23 @@ export function SessionDataCollectionScreen() {
 
   /* -------------------- RENDER -------------------- */
 
+  /* -------------------- PAUSE GOAL TIMERS WHEN MAIN TIMER PAUSES -------------------- */
+  useEffect(() => {
+    if (!isTimerRunning) {
+      setGoalStates((prev) => {
+        const updated = { ...prev };
+
+        Object.keys(updated).forEach((goalId) => {
+          updated[goalId] = {
+            ...updated[goalId],
+            timerRunning: false, // ⏸ force pause
+          };
+        });
+
+        return updated;
+      });
+    }
+  }, [isTimerRunning]);
   return (
     <div className="min-h-screen bg-[#efefef]">
       <AppHeader />

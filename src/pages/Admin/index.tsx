@@ -13,8 +13,11 @@ import { AuditSummary } from "./components/Audit/AuditSummary";
 import { Button } from "../../components/Button";
 import { Activity, ArrowLeft, Shield, Target, UserPlus, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { usePermission } from "../../utils/usePermission";
 
 export function AdminScreen() {
+
+  const {hasPermission} = usePermission()
   const navigate = useNavigate()
   return (
     <div className="min-h-screen bg-[#efefef]">
@@ -82,10 +85,11 @@ export function AdminScreen() {
           <TabsContent value="goal-bank">
             <GoalBankManagement />
           </TabsContent>
-
+          {hasPermission("managePermissions" ) && 
           <TabsContent value="permissions">
             <PermissionsManagement />
           </TabsContent>
+          }
 
           <TabsContent value="audit-logs">
             <AuditSummary />

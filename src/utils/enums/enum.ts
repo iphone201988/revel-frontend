@@ -1,8 +1,9 @@
 export const SystemRoles = {
-  1: "SuperAdmin",
-  2: "Admin",
-  3: "User",
-};
+  1: "1",
+  2: "2",
+  3: "3", 
+} as const;
+
 
 export const SupportLevel = {
   Independent: "Independent",
@@ -22,3 +23,9 @@ export const GoalStatus = {
   Discontinued: "Discontinued",
   InProgress: "InProgress",
 };
+
+export const REPORT_STATUS = {
+  DRAFT: "DRAFT",
+  SIGNED: "SIGNED",
+  PENDNG_QSP_SIGNATURE:"PENDNG_QSP_SIGNATURE"
+}

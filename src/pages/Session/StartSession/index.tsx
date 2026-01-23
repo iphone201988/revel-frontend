@@ -21,7 +21,7 @@ import {
 } from "../../../components/Select";
 import { RadioGroup, RadioGroupItem } from "../../../components/Radio-group";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useStartSessionMutation } from "../../../redux/api/provider";
+import { useGetUserProfileQuery, useStartSessionMutation } from "../../../redux/api/provider";
 import { handleError } from "../../../utils/helper";
 import { SessionType } from "../../../utils/enums/enum";
 import { useFormik } from "formik";
@@ -41,10 +41,10 @@ export function SessionInitiationScreen() {
   };
 
   const location = useLocation();
-
+const {data:profile} = useGetUserProfileQuery()
   const clients = location?.state?.clients;
   const client = location?.state?.client;
-  const currentUser = location?.state?.currentUser;
+  const currentUser = profile?.data;
 
   // Pre-populate from sessionInitData if coming from calendar, otherwise use defaults
   const sessionInitData = data?.data;
@@ -54,7 +54,7 @@ export function SessionInitiationScreen() {
 
   useEffect(() => {
     if (isSuccess) {
-      showSuccess("Session Started");
+      showSuccess("Session initiated successfully");
       navigate("/session-data-collection", {
         state: { sessionInitData: data?.data },
       });
@@ -79,7 +79,8 @@ export function SessionInitiationScreen() {
       if (!values.sessionDate) errors.sessionDate = "Session date is required";
       if (!values.startTime) errors.startTime = "Start time is required";
       if (!values.endTime) errors.endTime = "End time is required";
-
+      if (values.attendees.length> 255) errors.attendees = "Present attendees length cannot exceed 255 charcaters"
+      
       if (
         values.startTime &&
         values.endTime &&
@@ -295,6 +296,12 @@ export function SessionInitiationScreen() {
                   onChange={formik.handleChange}
                   placeholder="e.g.  Therapist, Parent, Sibling"
                 />
+                {formik.touched.attendees &&
+                    typeof formik.errors.attendees === "string" && (
+                      <p className="text-red-500 text-sm">
+                        {formik.errors.attendees}
+                      </p>
+                    )}
               </div>
               <p className="text-sm text-[#395159]">
                 List all individuals present during this session

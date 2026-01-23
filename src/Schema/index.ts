@@ -12,16 +12,16 @@ export const goalSchema = Yup.object({
   masteryBaseline: Yup.number().min(0).max(100).required("Baseline required"),
 });
 export const clientSchema = Yup.object({
-  name: Yup.string().trim().required("Client name is required"),
+  name: Yup.string().min(3).max(25).trim().required("Client name is required"),
   dob: Yup.string()
     .required("Date of birth is required")
     .test("min-age", "Client must be at least 16 years old", (value) =>
       isAtLeast16YearsOld(value)
     ),
   diagnosis: Yup.string().trim().required("Diagonis is required"),
-  parentName: Yup.string().trim().required("Parent Name is required"),
+  parentName: Yup.string().trim().min(3).max(25).required("Parent Name is required"),
   email: Yup.string().trim().email("Enter a valid email").required(),
-  phone: Yup.string().trim().required("Phone Number is required"),
+  phone: Yup.string().trim().min(5).max(15).required("Phone Number is required"),
   countryCode: Yup.string().trim().required(),
   assignedProvider: Yup.array()
     .of(Yup.string())
@@ -32,39 +32,39 @@ export const clientSchema = Yup.object({
 });
 
 export const addProviderSchema = Yup.object({
-  name: Yup.string().required("Provider name is required"),
+  name: Yup.string().min(3).max(25).required("Provider name is required"),
   credential: Yup.string().required("credential is required"),
   clinicRole: Yup.string().required("Clinic role is required"),
   systemRole: Yup.string().required("System role is required"),
   email: Yup.string().email().required("Email is required"),
-  phone: Yup.string().nullable(),
+  phone: Yup.string().required().min(5).max(15),
 });
 
 // schemas/editClientSchema.ts
 
 export const editClientSchema = Yup.object({
-  name: Yup.string().trim().required("Client name is required"),
+  name: Yup.string().min(3).max(25).trim().required("Client name is required"),
   dob: Yup.string().trim().required("Date of birth is required"),
   diagnosis: Yup.string().trim().required("Diagnosis is required"),
-  parentName: Yup.string().trim().required("Parent/Guardian name is required"),
+  parentName: Yup.string().min(3).max(25).trim().required("Parent/Guardian name is required"),
   email: Yup.string()
     .trim()
     .email("Invalid email")
     .required("Email is required"),
-  phone: Yup.string().trim().required("Phone number is required"),
+  phone: Yup.string().trim().min(5).max(15).required("Phone number is required"),
   reviewDate: Yup.string().trim().required("Review date is required"),
 });
 
 export const stepSchemas = [
   Yup.object({
-    clinicName: Yup.string().min(2).required("Clinic name is required"),
-    ownerFirstName: Yup.string().min(2).required("First name is required"),
-    ownerLastName: Yup.string().min(2).required("Last name is required"),
+    clinicName: Yup.string().min(3).max(50).required("Clinic name is required"),
+    ownerFirstName: Yup.string().min(2).max(25).required("First name is required"),
+    ownerLastName: Yup.string().min(2).max(25).required("Last name is required"),
     email: Yup.string().email().required("Email is required"),
   }),
 
   Yup.object({
-    phone: Yup.string().required("Phone is required"),
+    phone: Yup.string().min(5).max(15).required("Phone is required"),
     clinicAddress: Yup.string().min(5).required("Address is required"),
     clinicCity: Yup.string().required("City is required"),
     clinicState: Yup.string().required("State is required"),
@@ -82,7 +82,7 @@ export const stepSchemas = [
 ];
 
 export const providerSchema = Yup.object({
-  name: Yup.string().trim().required("Provider name is required"),
+  name: Yup.string().trim().min(3).max(25).required("Provider name is required"),
   credential: Yup.string().trim().required("Credential is required"),
   clinicRole: Yup.string().trim().required("Clinic role is required"),
   systemRole: Yup.string().trim().required("System role is required"),
@@ -90,7 +90,7 @@ export const providerSchema = Yup.object({
     .trim()
     .email("Enter valid email")
     .required("Email is required"),
-  phone: Yup.string().optional(),
+  phone: Yup.string().min(5).max(15).optional(),
   countryCode: Yup.string().optional(),
   licenseNumber: Yup.string().optional(),
 });

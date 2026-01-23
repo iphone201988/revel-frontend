@@ -43,9 +43,9 @@ export function HistorySection({
 
   // Extract sessions array from API response structure if needed
   const sessions = useMemo(() => {
-    console.log("Raw sessions received:", rawSessions);
-    console.log("Type:", typeof rawSessions);
-    console.log("Is Array:", Array.isArray(rawSessions));
+    // console.log("Raw sessions received:", rawSessions);
+    // console.log("Type:", typeof rawSessions);
+    // console.log("Is Array:", Array.isArray(rawSessions));
 
     // If it's already an array, use it
     if (Array.isArray(rawSessions)) {
@@ -58,15 +58,15 @@ export function HistorySection({
       typeof rawSessions === "object" &&
       Array.isArray(rawSessions.data)
     ) {
-      console.log(
-        "Extracting from data property, length:",
-        rawSessions.data.length
-      );
+      // console.log(
+      //   "Extracting from data property, length:",
+      //   rawSessions.data.length
+      // );
       return rawSessions.data;
     }
 
     // Otherwise return empty array
-    console.warn("Sessions is not in expected format, returning empty array");
+    // console.warn("Sessions is not in expected format, returning empty array");
     return [];
   }, [rawSessions]);
 
@@ -115,23 +115,23 @@ export function HistorySection({
   const permissionFilteredSessions = useMemo(() => {
     // Ensure sessions is an array
     if (!Array.isArray(sessions)) {
-      console.error("Sessions is not an array:", sessions);
+      // console.error("Sessions is not an array:", sessions);
       return [];
     }
 
-    console.log(
-      "Filtering sessions. canViewAll:",
-      canViewAll,
-      "sessions count:",
-      sessions.length
-    );
+    // console.log(
+    //   "Filtering sessions. canViewAll:",
+    //   canViewAll,
+    //   "sessions count:",
+    //   sessions.length
+    // );
 
     if (canViewAll) return sessions;
 
     return sessions.filter((session) => {
       const providerId = session?.sessionId?.provider;
       const userId = currentUser?._id;
-      console.log("Comparing provider:", providerId, "with user:", userId);
+      // console.log("Comparing provider:", providerId, "with user:", userId);
       return providerId === userId;
     });
   }, [canViewAll, sessions, currentUser]);
@@ -140,7 +140,7 @@ export function HistorySection({
   const visibleSessions = useMemo(() => {
     // Ensure we have an array
     if (!Array.isArray(permissionFilteredSessions)) {
-      console.error("permissionFilteredSessions is not an array");
+      // console.error("permissionFilteredSessions is not an array");
       return [];
     }
 
